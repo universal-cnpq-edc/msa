@@ -1,32 +1,25 @@
-CCLIB=-lsdsl -ldivsufsort -ldivsufsort64 -Wno-comment 
+CC=g++
+CFLAGS= -Wall -Werror -lm -ldl -Wno-unused-variable
 
-LIB_DIR = ${HOME}/lib
-INC_DIR = ${HOME}/include
-MY_CXX_FLAGS= -std=c++14 
+DEBUG = 0
 
-MY_CXX_OPT_FLAGS= -O3 -m64 
-CXX=g++
+LIBOBJ = external/malloc_count/malloc_count.o
 
-CXX_FLAGS=$(MY_CXX_FLAGS) $(MY_CXX_OPT_FLAGS) -I$(INC_DIR) -L$(LIB_DIR) $(LFLAGS) $(DEFINES)
+DEFINES = -DDEBUG=$(DEBUG)
 
-all: naive msa cmsa
+all: main 
 
+main: main.cpp $(LIBOBJ)
+	$(CC) $(CFLAGS) $(DEFINES) $^ -o $@
 
-naive: naive.cpp
-	$(CXX) $^ $(CCLIB) -o $@ $(CXX_FLAGS)
+%.o: %.c %.h
+	gcc -c $< -o $@
 
-msa: msa.cpp
-	$(CXX) $^ $(CCLIB) -o $@ $(CXX_FLAGS)
-
-cmsa: cmsa.cpp
-	$(CXX) $^ $(CCLIB) -o $@ $(CXX_FLAGS)
-
-test: naive msa 
-	./naive < exemplo-fig1-paper.in
-	./msa < exemplo-fig1-paper.in
-
-run: cmsa
-	./cmsa < exemplo-fig1-paper.in
+run:
+	./main dataset/input3_novo.txt -t -k 10 -o
 
 clean:
-	rm -f msa naive
+	rm -rf *.o main fred $(LIBOBJ)
+
+fred: fred.cpp $(LIBOBJ)
+	$(CC) $(CFLAGS) $(DEFINES) $^ -o $@
