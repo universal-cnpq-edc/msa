@@ -21,7 +21,7 @@ At the first line, we have the following:
 +  *n*: number of objects
 +  *q*: number of queries
 
-The next lines give the reference objects, objects and queries (all given as array of *dim* integers).
+The next lines give the reference objects, objects and queries (all given as an array of *dim* integers).
 
 ### Input example:
 ```
