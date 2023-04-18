@@ -64,12 +64,15 @@ struct Decoded {
 
 int p(int* loi, int rj, int refs);
 void fullPermutationIndexing(int refs, int dim, int n, int * refsR, int *offset, int *lastValues, std::fstream& f_in, vector<bool> *BS);
+void fullPermutationIndexing(int refs, int dim, int n, int* refsR, std::fstream& f_in, int *M);
+
 void createOrderedList(int refs, int dim, int* oi, int* loi, int* r);
 
 string bsToString(int index, int num, vector<bool> *BS);
 bool node_sorter(Node const& lhs, Node const& rhs);
 void fullPermutationSearching(int refs, int dim, int n, int * q, int * refsR, struct Node *acc, int* offset, vector<bool> *BS);
-//int_t currentTimeMillis();
+void fullPermutationSearching(int refs, int dim, int n, int * q, int * refsR, struct Node *acc, int *M);
+
 void time_start(time_t *t_time, clock_t *c_clock);
 double time_stop(time_t t_time, clock_t c_clock);
 
@@ -83,10 +86,13 @@ int indexOf(int bsindex, int startPos, int offset_value, vector<bool> *BS);
 
 int write_output(struct Node *acc, int n, std::fstream& f_out, int knn);
 
+int cMSA(string s_in, string s_out, int output, int verbose, int time, int knn);
+int MSA(string s_in, string s_out, int output, int verbose, int time, int knn);
+
 
 void usage(char *name){
     puts("Available options:");
-    //puts("\t-A a\tpreferred algorithm to use (default 0)");
+    puts("\t-A a\talgorithm to use (default 2)");
     puts("\t-o\toutput computed file");
     puts("\t-t\ttime (seconds)");
     puts("\t-k\tknn-queries");
@@ -98,21 +104,18 @@ void usage(char *name){
 
 int main(int argc, char** argv) {
 
-    time_t t_start=0;
-    clock_t c_start=0;
-
     /**/
     extern char *optarg;
     extern int optind; //, opterr, optopt;
   
     int c=0, verbose=0, time=0, output=0, knn=0;
-    //int ALG=0;//Algorithm
+    int ALG=2;//Algorithm
   
     while ((c=getopt(argc, argv, "A:ovtk:h")) != -1) {
       switch (c)
       {
         case 'A':
-          //ALG=(size_t)atoi(optarg); 
+          ALG=(size_t)atoi(optarg); 
           break;
         case 'o':
           output++; break;
@@ -131,20 +134,46 @@ int main(int argc, char** argv) {
     free(optarg);
     
     string s_in;
-    if(optind+1==argc) {
-      s_in = argv[optind++];
-    }
-    else  usage(argv[0]);
+    if(optind+1==argc)
+        s_in = argv[optind++];
+    else 
+        usage(argv[0]);
     /**/
-    
-    std::fstream f_in(s_in, std::ios_base::in);
-    if(!f_in.is_open()) exit(EXIT_FAILURE);
     
     string s_out;
     if(output){
       size_t i = s_in.rfind('.', s_in.length());
-      s_out = s_in.substr(0, i) + ".out";
+      if(verbose)
+        s_out = s_in.substr(0, i) + ".A"+ to_string(ALG) + ".out";
+      else
+        s_out = s_in.substr(0, i) + ".out";
     }
+    
+    switch(ALG){
+        /****/
+        case 1: 
+            cout<<"## MSA ##"<<endl;//no compression
+            MSA(s_in, s_out, output, verbose, time, knn);
+            break;
+        case 2: 
+            cout<<"## cMSA ##"<<endl;
+            cMSA(s_in, s_out, output, verbose, time, knn);
+            break;
+        default:
+            exit(EXIT_FAILURE);
+            break;
+    }
+    return 0;
+}
+
+int cMSA(string s_in, string s_out, int output, int verbose, int time, int knn){
+
+    time_t t_start=0;
+    clock_t c_start=0;
+    
+    std::fstream f_in(s_in, std::ios_base::in);
+    if(!f_in.is_open()) exit(EXIT_FAILURE);
+
     
     int dim, refs, n, num_q;
     
@@ -176,12 +205,12 @@ int main(int argc, char** argv) {
     delete[] lastValues;
     /**/
 
-    cout << "dim = " << dim << "; n = " << n << "; refs = " << refs << "; q = " << num_q << endl;
-    //cout << "(n_objs x n_refs) x  32 bits = (" << n << " x " << refs << ") x 32 bits = " << n * refs * 32 << endl;
+    if(verbose)
+        cout << "dim = " << dim << "; refs = " << refs << "; n = " << n  << "; q = " << num_q << endl;
+      //cout << "(n_objs x n_refs) x  32 bits = (" << n << " x " << refs << ") x 32 bits = " << n * refs * 32 << endl;
 
-    //cout << "Tempo para indexar (ms) = " << (t2 - t1) << endl;
     if(time){
-      cout << "Tempo para indexar:" << endl;
+      cout << "Indexing:" << endl;
       time_stop(t_start, c_start);
     }
     
@@ -201,8 +230,7 @@ int main(int argc, char** argv) {
     
     if(knn>0){//knn queries
       
-        knn = min(knn, n);
-        
+       
         std::fstream f_out;
         if(output){
           f_out.open(s_out, std::ios_base::out);  
@@ -227,7 +255,7 @@ int main(int argc, char** argv) {
         if(output) f_out.close();
         
         if(time){
-          cout << "Tempo para buscas:" << endl;
+          cout << "Searching:" << endl;
           time_stop(t_start, c_start);
         }
     }
@@ -236,6 +264,81 @@ int main(int argc, char** argv) {
     delete[] offset;
     //delete[] bs;
     delete[] BS;    
+    f_in.close();
+    
+    return 0;
+}
+
+int MSA(string s_in, string s_out, int output, int verbose, int time, int knn){
+
+    time_t t_start=0;
+    clock_t c_start=0;
+    
+    std::fstream f_in(s_in, std::ios_base::in);
+    if(!f_in.is_open()) exit(EXIT_FAILURE);
+    
+    int dim, refs, n, num_q;
+    
+    f_in >> dim; //dimensoes
+    f_in >> refs; //referencias (pivos)
+    f_in >> n; //objetos
+    f_in >> num_q; //consultas
+    
+    int *r = new int[dim * refs];    
+    for (int i = 0; i < dim * refs; i++) f_in >> r[i]; //referencias
+    
+    //vector<int> *M = new vector<int>[refs];
+    int *M = new int[n * refs];
+    
+    if(time) time_start(&t_start, &c_start);
+    
+    fullPermutationIndexing(refs, dim, n, r, f_in, M);
+
+    if(verbose)
+        cout << "dim = " << dim << "; refs = " << refs << "; n = " << n  << "; q = " << num_q << endl;
+      //cout << "(n_objs x n_refs) x  32 bits = (" << n << " x " << refs << ") x 32 bits = " << n * refs * 32 << endl;
+
+    if(time){
+      cout << "Indexing:" << endl;
+      time_stop(t_start, c_start);
+    }
+    
+    cout << "Encoded size (bits) = " << n * refs * 32 << endl;
+    cout << "########" <<endl;
+    
+    if(knn>0){//knn queries
+              
+        std::fstream f_out;
+        if(output){
+          f_out.open(s_out, std::ios_base::out);  
+          if(!f_out.is_open()) exit(EXIT_FAILURE);
+        }
+               
+        if(time) time_start(&t_start, &c_start);
+        
+        for (int i = 0; i < num_q; i++) {
+
+            int q[dim];
+            for (int j = 0; j < dim; j++) {
+                f_in >> q[j];
+            }
+            struct Node *acc = new struct Node[n];//?ok
+    
+            fullPermutationSearching(refs, dim, n, q, r, acc, M);
+            if(output) write_output(acc, n, f_out, knn);
+            delete[] acc;
+        }
+        
+        if(output) f_out.close();
+        
+        if(time){
+          cout << "Searching:" << endl;
+          time_stop(t_start, c_start);
+        }
+    }
+
+    delete[] r;
+    delete[] M;
     f_in.close();
     
     return 0;
@@ -272,6 +375,29 @@ void fullPermutationIndexing(int refs, int dim, int n, int* refsR, int *offset, 
                 lastValues[j] = value;
                 offset[j] = deltaEncode(diff, j, offset[j], BS);
             }
+        }
+        
+    }
+    delete[] oi;
+    delete[] loi;
+    
+}
+
+void fullPermutationIndexing(int refs, int dim, int n, int* refsR, std::fstream& f_in, int* M) {
+    
+    int *loi = new int[refs];
+    int *oi = new int[dim]; //objeto
+    
+    for (int i = 0; i < n; i++) {
+        
+        for (int kk = 0; kk < dim; kk++) {
+            f_in >> oi[kk];
+        }
+        
+        createOrderedList(refs, dim, oi, loi, refsR);
+        
+        for (int j = 0; j < refs; j++) {
+            M[j * n + i] = i * refs + p(loi, j, refs);
         }
         
     }
@@ -381,6 +507,37 @@ void fullPermutationSearching(int refs, int dim, int n, int * q, int * refsR, st
         
     }
     
+    delete[] loi;
+}
+
+void fullPermutationSearching(int refs, int dim, int n, int * q, int * refsR, struct Node *acc, int* M) {
+    
+    //int_t t1 = time_start();
+
+    for (int j = 0; j < n; j++) {
+        struct Node tmp = {j, 0};
+        acc[j] = tmp;
+    }
+    int *loi = new int[refs];
+    createOrderedList(refs, dim, q, loi, refsR);
+
+    for (int j = 0; j < refs; j++) {
+        
+        int refPosQ = j;
+        
+        int oid = 0;
+        
+        for (int k = loi[j] * n; k < loi[j] * n + n; k++) {
+            
+            int refPos = M[k] % refs;
+
+            acc[oid].d += abs(refPosQ - refPos);
+
+            oid++; 
+            
+        }
+        
+    }    
     delete[] loi;
 }
 
@@ -495,7 +652,8 @@ int write_output(struct Node *acc, int n, std::fstream& f_out, int knn){
     
     std::sort(acc, acc + n, &node_sorter);    
     //for (int i = 0; i < n; i++) {
-    for (int i = 0; i < knn; i++) {
+    int k = min(knn,n);
+    for (int i = 0; i < k; i++) {
       f_out << acc[i].i << " "; 
     }
     f_out << endl; 

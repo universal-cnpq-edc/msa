@@ -2,10 +2,11 @@ CC=g++
 CFLAGS= -Wall -Werror -lm -ldl -Wno-unused-variable
 
 DEBUG = 0
-
 LIBOBJ = external/malloc_count/malloc_count.o
 
 DEFINES = -DDEBUG=$(DEBUG)
+
+DATA = dataset/input3.txt
 
 all: main 
 
@@ -16,7 +17,7 @@ main: main.cpp $(LIBOBJ)
 	gcc -c $< -o $@
 
 run:
-	./main dataset/input3_novo.txt -t -k 10 -o
+	./main $(DATA) -t -k 10 -o -A 1
 
 clean:
 	rm -rf *.o main fred $(LIBOBJ)

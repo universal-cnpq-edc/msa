@@ -42,6 +42,7 @@ The next lines give the reference objects, objects and queries (all given as an 
 ### Available options:
 
 ```sh
+-A a  algorithm to use (default 2)
 -o  output computed file
 -t  time (seconds)
 -k  knn-queries
@@ -52,19 +53,20 @@ The next lines give the reference objects, objects and queries (all given as an 
 ### Running example:
 
 ```c
-./main dataset/example.txt -t -k 5 -o
+./main dataset/example.txt -t -k 5 -o -A 2
 ```
-```c
-dim = 3; n = 5; refs = 2; q = 4
-Tempo para indexar:
-CLOCK = 0.000134 TIME = 0.000000
+
+```sh
+## cMSA ##
+Indexing:
+CLOCK = 0.000077 TIME = 0.000000
 ########
 Encoded size (bits) = 34
 ########
-Tempo para buscas:
-CLOCK = 0.000243 TIME = 0.000000
+Searching:
+CLOCK = 0.000287 TIME = 0.000000
 ########
-malloc_count ### exiting, total: 19,218, peak: 18,670, current: 1,024
+malloc_count ### exiting, total: 19,258, peak: 18,710, current: 1,024
 ```
 
 ### Output example:
