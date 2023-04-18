@@ -54,9 +54,22 @@ The next lines give the reference objects, objects and queries (all given as an 
 ```c
 ./main dataset/example.txt -t -k 5 -o
 ```
+```c
+dim = 3; n = 5; refs = 2; q = 4
+Tempo para indexar:
+CLOCK = 0.000134 TIME = 0.000000
+########
+Encoded size (bits) = 34
+########
+Tempo para buscas:
+CLOCK = 0.000243 TIME = 0.000000
+########
+malloc_count ### exiting, total: 19,218, peak: 18,670, current: 1,024
+```
 
 ### Output example:
-```c
+```sh
+$ more dataset/example.out
 0 1 2 3 4 
 1 2 3 4 0 
 0 1 2 3 4 
