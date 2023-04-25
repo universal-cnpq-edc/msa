@@ -4,6 +4,8 @@
  * > ler a entrada por partes (1 objeto por vez e construir o indice) - OK
  * > criar CLI - OK
  * > mudar o bitset para vector<bool> - OK
+ * > inverter looping busca (bucket->Oid para Oid->bucket) - OK
+ * > usar PQ para evitar ACC[1..n] - OK
  * 
  * > usar sdsl para o bitvector
  * > usar sdsl para Elias?
@@ -33,6 +35,9 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <queue>
+#include <stack>
+#include <cfloat>
 #include "external/malloc_count/malloc_count.h"
 
 
@@ -57,6 +62,15 @@ struct Node {
     double d;
 };
 
+struct CompareNode {
+    bool operator()(Node const& a, Node const& b){
+        if (a.d != b.d) return a.d < b.d;
+        return a.i < b.i;
+    }
+};
+
+typedef priority_queue<Node, vector<Node>, CompareNode> priority_queue_Node;
+
 struct Decoded {
     int value;
     int position;
@@ -70,8 +84,8 @@ void createOrderedList(int refs, int dim, int* oi, int* loi, int* r);
 
 string bsToString(int index, int num, vector<bool> *BS);
 bool node_sorter(Node const& lhs, Node const& rhs);
-void fullPermutationSearching(int refs, int dim, int n, int * q, int * refsR, struct Node *acc, int* offset, vector<bool> *BS);
-void fullPermutationSearching(int refs, int dim, int n, int * q, int * refsR, struct Node *acc, int *M);
+void fullPermutationSearching(int refs, int dim, int n, int * q, int * refsR, struct Node *acc, int* offset, vector<bool> *BS, priority_queue_Node &PQ, int knn);
+void fullPermutationSearching(int refs, int dim, int n, int * q, int * refsR, struct Node *acc, int *M, priority_queue_Node &PQ, int knn);
 
 void time_start(time_t *t_time, clock_t *c_clock);
 double time_stop(time_t t_time, clock_t c_clock);
@@ -84,10 +98,13 @@ Decoded deltaDecodeDiff(int bsindex, int index, int offset_value, vector<bool> *
 int getInt(int bsindex, int start, int end, vector<bool> *BS);
 int indexOf(int bsindex, int startPos, int offset_value, vector<bool> *BS);
 
-int write_output(struct Node *acc, int n, std::fstream& f_out, int knn);
+int write_output(struct Node *acc, int n, std::fstream& f_out, int knn, priority_queue_Node &PQ);
 
 int cMSA(string s_in, string s_out, int output, int verbose, int time, int knn);
 int MSA(string s_in, string s_out, int output, int verbose, int time, int knn);
+
+void push_pq_fixed_size(priority_queue_Node &PQ, Node tmp, int knn);
+void init_pq_fixed_size(priority_queue_Node &PQ, int knn);
 
 
 void usage(char *name){
@@ -235,6 +252,7 @@ int cMSA(string s_in, string s_out, int output, int verbose, int time, int knn){
         if(output){
           f_out.open(s_out, std::ios_base::out);  
           if(!f_out.is_open()) exit(EXIT_FAILURE);
+          if(verbose) cout << s_out <<endl;
         }
                
         if(time) time_start(&t_start, &c_start);
@@ -245,10 +263,13 @@ int cMSA(string s_in, string s_out, int output, int verbose, int time, int knn){
             for (int j = 0; j < dim; j++) {
                 f_in >> q[j];
             }
-            struct Node *acc = new struct Node[n];//?ok
-    
-            fullPermutationSearching(refs, dim, n, q, r, acc, offset, BS);
-            if(output) write_output(acc, n, f_out, knn);
+            //struct Node *acc = new struct Node[n];//?ok
+            struct Node *acc = NULL;
+            priority_queue_Node PQ;
+            init_pq_fixed_size(PQ, knn);
+            
+            fullPermutationSearching(refs, dim, n, q, r, acc, offset, BS, PQ, knn);
+            if(output) write_output(acc, n, f_out, knn, PQ);
             delete[] acc;
         }
         
@@ -312,6 +333,7 @@ int MSA(string s_in, string s_out, int output, int verbose, int time, int knn){
         if(output){
           f_out.open(s_out, std::ios_base::out);  
           if(!f_out.is_open()) exit(EXIT_FAILURE);
+          if(verbose) cout << s_out <<endl;
         }
                
         if(time) time_start(&t_start, &c_start);
@@ -322,10 +344,14 @@ int MSA(string s_in, string s_out, int output, int verbose, int time, int knn){
             for (int j = 0; j < dim; j++) {
                 f_in >> q[j];
             }
-            struct Node *acc = new struct Node[n];//?ok
-    
-            fullPermutationSearching(refs, dim, n, q, r, acc, M);
-            if(output) write_output(acc, n, f_out, knn);
+            //struct Node *acc = new struct Node[n];//?ok
+            struct Node *acc = NULL;
+            priority_queue_Node PQ;
+            init_pq_fixed_size(PQ, knn);
+            
+            
+            fullPermutationSearching(refs, dim, n, q, r, acc, M, PQ, knn);
+            if(output) write_output(acc, n, f_out, knn, PQ);
             delete[] acc;
         }
         
@@ -469,23 +495,25 @@ bool node_sorter(Node const& lhs, Node const& rhs) {
 
 }
 
-void fullPermutationSearching(int refs, int dim, int n, int * q, int * refsR, struct Node *acc, int* offset, vector<bool> *BS) {
+void fullPermutationSearching(int refs, int dim, int n, int * q, int * refsR, struct Node *acc, int* offset, vector<bool> *BS, priority_queue_Node &PQ, int knn) {
     
     //int_t t1 = time_start();
-
+    /*
     for (int j = 0; j < n; j++) {
-        struct Node tmp = {j, 0};
+        struct Node tmp = {j, 0.0};
         acc[j] = tmp;
     }
+    */
+    
+    
     int *loi = new int[refs];
     createOrderedList(refs, dim, q, loi, refsR);
     
+    /*
     for (int j = 0; j < refs; j++) {
         
         int refPosQ = p(loi, loi[j], refs);
-        
         int oid = 0;
-        
         int bucket = loi[j];
         
         int msa_k = 0;
@@ -498,47 +526,113 @@ void fullPermutationSearching(int refs, int dim, int n, int * q, int * refsR, st
             index = tmp.position;
 
             int refPos = msa_k % refs;
-
             acc[oid].d += abs(refPosQ - refPos);
-
             oid++; 
-            
+        }
+    }
+    */
+    /**/
+    int *MSA_k = new int[refs];
+    int *Index = new int[refs];
+    for (int j = 0; j < refs; j++) Index[j] = MSA_k[j] = 0;
+    /**/
+    
+    for (int oid = 0; oid < n; oid++) {
+      double Acc = 0.0;
+      for (int j = 0; j < refs; j++) {
+        
+        int refPosQ = p(loi, loi[j], refs);//?
+        int bucket = loi[j];
+        
+        //int k = loi[j] * n + oid;
+       
+        Decoded tmp = deltaDecodeDiff(bucket, Index[j], offset[bucket], BS);
+        MSA_k[j] += tmp.value;
+        Index[j] = tmp.position;
+
+        int refPos = MSA_k[j] % refs;
+        Acc += abs(refPosQ - refPos);
+      }
+      
+      struct Node tmp = {oid, Acc};
+      push_pq_fixed_size(PQ, tmp, knn);                
+      //acc[oid].d = Acc; 
+    }
+    
+    delete[] MSA_k;
+    delete[] Index;
+    
+    delete[] loi;
+}
+
+void fullPermutationSearching(int refs, int dim, int n, int * q, int * refsR, struct Node *acc, int* M, priority_queue_Node &PQ, int knn) {
+    
+    //int_t t1 = time_start();
+    /*
+    for (int j = 0; j < n; j++) {
+        struct Node tmp = {j, 0.0};
+        acc[j] = tmp;
+    }
+    */
+    int *loi = new int[refs];
+    createOrderedList(refs, dim, q, loi, refsR);
+
+    /*
+    for (int j = 0; j < refs; j++) {
+        int refPosQ = j;
+        int oid = 0;
+        for (int k = loi[j] * n; k < loi[j] * n + n; k++) {
+            int refPos = M[k] % refs;
+            acc[oid].d += abs(refPosQ - refPos);
+            oid++; 
+        }
+    }
+    */
+    
+    for (int oid = 0; oid < n; oid++) {
+        double Acc = 0.0;
+        for( int j = 0; j < refs; j++) {
+        
+          int refPosQ = j;
+          int k = loi[j] * n + oid;
+          int refPos = M[k] % refs;
+          //acc[oid].d += abs(refPosQ - refPos);
+          Acc += abs(refPosQ - refPos);
         }
         
+        struct Node tmp = {oid, Acc};
+        push_pq_fixed_size(PQ, tmp, knn);                
+        //acc[oid].d = Acc;
     }
     
     delete[] loi;
 }
 
-void fullPermutationSearching(int refs, int dim, int n, int * q, int * refsR, struct Node *acc, int* M) {
-    
-    //int_t t1 = time_start();
-
-    for (int j = 0; j < n; j++) {
-        struct Node tmp = {j, 0};
-        acc[j] = tmp;
+//keep PQ with maximum knn elements
+void push_pq_fixed_size(priority_queue_Node &PQ, Node tmp, int knn){
+/*
+  if(PQ.size() < (long unsigned) knn){
+    PQ.push(tmp);
+  }
+  else{
+    if(tmp.d < PQ.top().d){
+      PQ.pop();
+      PQ.push(tmp);
     }
-    int *loi = new int[refs];
-    createOrderedList(refs, dim, q, loi, refsR);
+  }  
+*/
+  if(tmp.d < PQ.top().d){
+    PQ.pop();
+    PQ.push(tmp);
+  }
+}
 
-    for (int j = 0; j < refs; j++) {
-        
-        int refPosQ = j;
-        
-        int oid = 0;
-        
-        for (int k = loi[j] * n; k < loi[j] * n + n; k++) {
-            
-            int refPos = M[k] % refs;
+void init_pq_fixed_size(priority_queue_Node &PQ, int knn){
 
-            acc[oid].d += abs(refPosQ - refPos);
-
-            oid++; 
-            
-        }
-        
-    }    
-    delete[] loi;
+  struct Node tmp = {0, DBL_MAX};
+  for( int i=0; i < knn; i++){
+      PQ.push(tmp);
+  }
 }
 
 void time_start(time_t *t_time, clock_t *c_clock){
@@ -648,8 +742,9 @@ int indexOf(int bsindex, int startPos, int offset_value, vector<bool> *BS) {
     return -1;
 }
  
-int write_output(struct Node *acc, int n, std::fstream& f_out, int knn){
+int write_output(struct Node *acc, int n, std::fstream& f_out, int knn, priority_queue_Node &PQ){
     
+    /*
     std::sort(acc, acc + n, &node_sorter);    
     //for (int i = 0; i < n; i++) {
     int k = min(knn,n);
@@ -657,6 +752,19 @@ int write_output(struct Node *acc, int n, std::fstream& f_out, int knn){
       f_out << acc[i].i << " "; 
     }
     f_out << endl; 
-      
+    */
+    //invert the PQ
+    stack<Node> S;
+    while (!PQ.empty()) {
+      S.push(PQ.top());
+      PQ.pop();
+    }
+    while(!S.empty()){
+        Node acc = S.top();
+        S.pop();
+        f_out << acc.i << " ";
+    }
+    f_out << endl;
+  
 return 0;
 }
