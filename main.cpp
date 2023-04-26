@@ -79,13 +79,16 @@ struct Decoded {
 int p(int* loi, int rj, int refs);
 void fullPermutationIndexing(int refs, int dim, int n, int * refsR, int *offset, int *lastValues, std::fstream& f_in, vector<bool> *BS);
 void fullPermutationIndexing(int refs, int dim, int n, int* refsR, std::fstream& f_in, int *M);
+void fullSequentialIndexing(int refs, int dim, int n, int* refsR, std::fstream& f_in, int *O);
 
 void createOrderedList(int refs, int dim, int* oi, int* loi, int* r);
 
 string bsToString(int index, int num, vector<bool> *BS);
 bool node_sorter(Node const& lhs, Node const& rhs);
+
 void fullPermutationSearching(int refs, int dim, int n, int * q, int * refsR, struct Node *acc, int* offset, vector<bool> *BS, priority_queue_Node &PQ, int knn);
 void fullPermutationSearching(int refs, int dim, int n, int * q, int * refsR, struct Node *acc, int *M, priority_queue_Node &PQ, int knn);
+void fullSequentialSearching(int refs, int dim, int n, int * q, int * refsR, struct Node *acc, int *O, priority_queue_Node &PQ, int knn);
 
 void time_start(time_t *t_time, clock_t *c_clock);
 double time_stop(time_t t_time, clock_t c_clock);
@@ -102,6 +105,7 @@ int write_output(struct Node *acc, int n, std::fstream& f_out, int knn, priority
 
 int cMSA(string s_in, string s_out, int output, int verbose, int time, int knn);
 int MSA(string s_in, string s_out, int output, int verbose, int time, int knn);
+int naive(string s_in, string s_out, int output, int verbose, int time, int knn);
 
 void push_pq_fixed_size(priority_queue_Node &PQ, Node tmp, int knn);
 void init_pq_fixed_size(priority_queue_Node &PQ, int knn);
@@ -167,7 +171,10 @@ int main(int argc, char** argv) {
     }
     
     switch(ALG){
-        /****/
+        case 0: 
+            cout<<"## naive ##"<<endl;//no compression
+            naive(s_in, s_out, output, verbose, time, knn);
+            break;
         case 1: 
             cout<<"## MSA ##"<<endl;//no compression
             MSA(s_in, s_out, output, verbose, time, knn);
@@ -370,6 +377,87 @@ int MSA(string s_in, string s_out, int output, int verbose, int time, int knn){
     return 0;
 }
 
+//sequential scan
+int naive(string s_in, string s_out, int output, int verbose, int time, int knn){
+
+    time_t t_start=0;
+    clock_t c_start=0;
+    
+    std::fstream f_in(s_in, std::ios_base::in);
+    if(!f_in.is_open()) exit(EXIT_FAILURE);
+    
+    int dim, refs, n, num_q;
+    
+    f_in >> dim; //dimensoes
+    f_in >> refs; //referencias (pivos)
+    f_in >> n; //objetos
+    f_in >> num_q; //consultas
+    
+    int *r = new int[dim * refs];    
+    for (int i = 0; i < dim * refs; i++) f_in >> r[i]; //referencias
+    
+    //vector<int> *M = new vector<int>[refs];
+    int *O = new int[n * refs];
+    
+    if(time) time_start(&t_start, &c_start);
+    
+    fullSequentialIndexing(refs, dim, n, r, f_in, O);
+
+    if(verbose)
+        cout << "dim = " << dim << "; refs = " << refs << "; n = " << n  << "; q = " << num_q << endl;
+      //cout << "(n_objs x n_refs) x  32 bits = (" << n << " x " << refs << ") x 32 bits = " << n * refs * 32 << endl;
+
+    if(time){
+      cout << "Indexing:" << endl;
+      time_stop(t_start, c_start);
+    }
+    
+    cout << "Encoded size (bits) = " << n * refs * 32 << endl;
+    cout << "########" <<endl;
+    
+    if(knn>0){//knn queries
+              
+        std::fstream f_out;
+        if(output){
+          f_out.open(s_out, std::ios_base::out);  
+          if(!f_out.is_open()) exit(EXIT_FAILURE);
+          if(verbose) cout << s_out <<endl;
+        }
+               
+        if(time) time_start(&t_start, &c_start);
+        
+        for (int i = 0; i < num_q; i++) {
+
+            int q[dim];
+            for (int j = 0; j < dim; j++) {
+                f_in >> q[j];
+            }
+            //struct Node *acc = new struct Node[n];//?ok
+            struct Node *acc = NULL;
+            priority_queue_Node PQ;
+            init_pq_fixed_size(PQ, knn);
+            
+            
+            fullSequentialSearching(refs, dim, n, q, r, acc, O, PQ, knn);
+            if(output) write_output(acc, n, f_out, knn, PQ);
+            delete[] acc;
+        }
+        
+        if(output) f_out.close();
+        
+        if(time){
+          cout << "Searching:" << endl;
+          time_stop(t_start, c_start);
+        }
+    }
+
+    delete[] r;
+    delete[] O;
+    f_in.close();
+    
+    return 0;
+}
+
 void fullPermutationIndexing(int refs, int dim, int n, int* refsR, int *offset, int *lastValues, std::fstream& f_in, vector<bool> *BS) {
     
     //bs = new BitSet[n];
@@ -424,6 +512,29 @@ void fullPermutationIndexing(int refs, int dim, int n, int* refsR, std::fstream&
         
         for (int j = 0; j < refs; j++) {
             M[j * n + i] = i * refs + p(loi, j, refs);
+        }
+        
+    }
+    delete[] oi;
+    delete[] loi;
+    
+}
+
+void fullSequentialIndexing(int refs, int dim, int n, int* refsR, std::fstream& f_in, int* O) {
+    
+    int *loi = new int[refs];
+    int *oi = new int[dim]; //objeto
+    
+    for (int i = 0; i < n; i++) {
+        
+        for (int kk = 0; kk < dim; kk++) {
+            f_in >> oi[kk];
+        }
+        
+        createOrderedList(refs, dim, oi, loi, refsR);
+        
+        for (int j = 0; j < refs; j++) {
+            O[i * refs + j] = loi[j];
         }
         
     }
@@ -596,6 +707,7 @@ void fullPermutationSearching(int refs, int dim, int n, int * q, int * refsR, st
           int refPosQ = j;
           int k = loi[j] * n + oid;
           int refPos = M[k] % refs;
+
           //acc[oid].d += abs(refPosQ - refPos);
           Acc += abs(refPosQ - refPos);
         }
@@ -603,6 +715,28 @@ void fullPermutationSearching(int refs, int dim, int n, int * q, int * refsR, st
         struct Node tmp = {oid, Acc};
         push_pq_fixed_size(PQ, tmp, knn);                
         //acc[oid].d = Acc;
+    }
+    
+    delete[] loi;
+}
+
+void fullSequentialSearching(int refs, int dim, int n, int * q, int * refsR, struct Node *acc, int *O, priority_queue_Node &PQ, int knn){    
+
+    int *loi = new int[refs];
+    createOrderedList(refs, dim, q, loi, refsR);
+    
+    for (int oid = 0; oid < n; oid++) {
+        double Acc = 0.0;
+        for( int j = 0; j < refs; j++) {
+        
+          int refPosQ = j;
+          int refPos = p(O+oid*refs, loi[j], refs);
+
+          Acc += abs(refPosQ - refPos);
+        }
+        
+        struct Node tmp = {oid, Acc};
+        push_pq_fixed_size(PQ, tmp, knn);                
     }
     
     delete[] loi;
