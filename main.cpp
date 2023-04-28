@@ -81,7 +81,7 @@ void fullPermutationIndexing(int refs, int dim, int n, int * refsR, int *offset,
 void fullPermutationIndexing(int refs, int dim, int n, int* refsR, std::fstream& f_in, int *M);
 void fullSequentialIndexing(int refs, int dim, int n, int* refsR, std::fstream& f_in, int *O);
 
-void createOrderedList(int refs, int dim, int* oi, int* loi, int* r);
+void createOrderedList(int refs, int dim, int* oi, int* loi, int* R);
 
 string bsToString(int index, int num, vector<bool> *BS);
 bool node_sorter(Node const& lhs, Node const& rhs);
@@ -103,9 +103,9 @@ int indexOf(int bsindex, int startPos, int offset_value, vector<bool> *BS);
 
 int write_output(struct Node *acc, int n, std::fstream& f_out, int knn, priority_queue_Node &PQ);
 
-int cMSA(string s_in, string s_out, int output, int verbose, int time, int knn);
-int MSA(string s_in, string s_out, int output, int verbose, int time, int knn);
-int naive(string s_in, string s_out, int output, int verbose, int time, int knn);
+int cMSA(string s_in, string s_out, int output, int verbose, int time, int knn, int r);
+int MSA(string s_in, string s_out, int output, int verbose, int time, int knn, int r);
+int naive(string s_in, string s_out, int output, int verbose, int time, int knn, int r);
 
 void push_pq_fixed_size(priority_queue_Node &PQ, Node tmp, int knn);
 void init_pq_fixed_size(priority_queue_Node &PQ, int knn);
@@ -129,10 +129,10 @@ int main(int argc, char** argv) {
     extern char *optarg;
     extern int optind; //, opterr, optopt;
   
-    int c=0, verbose=0, time=0, output=0, knn=0;
+    int c=0, verbose=0, time=0, output=0, knn=0, r=0;
     int ALG=2;//Algorithm
   
-    while ((c=getopt(argc, argv, "A:ovtk:h")) != -1) {
+    while ((c=getopt(argc, argv, "A:ovtk:r:h")) != -1) {
       switch (c)
       {
         case 'A':
@@ -146,6 +146,8 @@ int main(int argc, char** argv) {
           time++; break;
         case 'k':
           knn=(size_t)atoi(optarg);  break;
+        case 'r':
+          r=(size_t)atoi(optarg);  break;
         case 'h':
           usage(argv[0]); break;       // show usage and stop
         case '?':
@@ -173,15 +175,15 @@ int main(int argc, char** argv) {
     switch(ALG){
         case 0: 
             cout<<"## naive ##"<<endl;//no compression
-            naive(s_in, s_out, output, verbose, time, knn);
+            naive(s_in, s_out, output, verbose, time, knn, r);
             break;
         case 1: 
             cout<<"## MSA ##"<<endl;//no compression
-            MSA(s_in, s_out, output, verbose, time, knn);
+            MSA(s_in, s_out, output, verbose, time, knn, r);
             break;
         case 2: 
             cout<<"## cMSA ##"<<endl;
-            cMSA(s_in, s_out, output, verbose, time, knn);
+            cMSA(s_in, s_out, output, verbose, time, knn, r);
             break;
         default:
             exit(EXIT_FAILURE);
@@ -190,7 +192,7 @@ int main(int argc, char** argv) {
     return 0;
 }
 
-int cMSA(string s_in, string s_out, int output, int verbose, int time, int knn){
+int cMSA(string s_in, string s_out, int output, int verbose, int time, int knn, int r){
 
     time_t t_start=0;
     clock_t c_start=0;
@@ -203,11 +205,12 @@ int cMSA(string s_in, string s_out, int output, int verbose, int time, int knn){
     
     f_in >> dim; //dimensoes
     f_in >> refs; //referencias (pivos)
+    if(r!=0 and r<refs) refs = r;
     f_in >> n; //objetos
     f_in >> num_q; //consultas
     
-    int *r = new int[dim * refs];    
-    for (int i = 0; i < dim * refs; i++) f_in >> r[i]; //referencias
+    int *R = new int[dim * refs];    
+    for (int i = 0; i < dim * refs; i++) f_in >> R[i]; //referencias
     
     int *offset = new int[refs]; 
     int *lastValues = new int[refs];
@@ -222,7 +225,7 @@ int cMSA(string s_in, string s_out, int output, int verbose, int time, int knn){
     
     if(time) time_start(&t_start, &c_start);
     
-    fullPermutationIndexing(refs, dim, n, r, offset, lastValues, f_in, BS);
+    fullPermutationIndexing(refs, dim, n, R, offset, lastValues, f_in, BS);
     
     /**/
     //delete[] o;
@@ -275,7 +278,7 @@ int cMSA(string s_in, string s_out, int output, int verbose, int time, int knn){
             priority_queue_Node PQ;
             init_pq_fixed_size(PQ, knn);
             
-            fullPermutationSearching(refs, dim, n, q, r, acc, offset, BS, PQ, knn);
+            fullPermutationSearching(refs, dim, n, q, R, acc, offset, BS, PQ, knn);
             if(output) write_output(acc, n, f_out, knn, PQ);
             delete[] acc;
         }
@@ -288,7 +291,7 @@ int cMSA(string s_in, string s_out, int output, int verbose, int time, int knn){
         }
     }
 
-    delete[] r;
+    delete[] R;
     delete[] offset;
     //delete[] bs;
     delete[] BS;    
@@ -297,7 +300,7 @@ int cMSA(string s_in, string s_out, int output, int verbose, int time, int knn){
     return 0;
 }
 
-int MSA(string s_in, string s_out, int output, int verbose, int time, int knn){
+int MSA(string s_in, string s_out, int output, int verbose, int time, int knn, int r){
 
     time_t t_start=0;
     clock_t c_start=0;
@@ -309,18 +312,19 @@ int MSA(string s_in, string s_out, int output, int verbose, int time, int knn){
     
     f_in >> dim; //dimensoes
     f_in >> refs; //referencias (pivos)
+    if(r!=0 and r<refs) refs = r;
     f_in >> n; //objetos
     f_in >> num_q; //consultas
     
-    int *r = new int[dim * refs];    
-    for (int i = 0; i < dim * refs; i++) f_in >> r[i]; //referencias
+    int *R = new int[dim * refs];    
+    for (int i = 0; i < dim * refs; i++) f_in >> R[i]; //referencias
     
     //vector<int> *M = new vector<int>[refs];
     int *M = new int[n * refs];
     
     if(time) time_start(&t_start, &c_start);
     
-    fullPermutationIndexing(refs, dim, n, r, f_in, M);
+    fullPermutationIndexing(refs, dim, n, R, f_in, M);
 
     if(verbose)
         cout << "dim = " << dim << "; refs = " << refs << "; n = " << n  << "; q = " << num_q << endl;
@@ -357,7 +361,7 @@ int MSA(string s_in, string s_out, int output, int verbose, int time, int knn){
             init_pq_fixed_size(PQ, knn);
             
             
-            fullPermutationSearching(refs, dim, n, q, r, acc, M, PQ, knn);
+            fullPermutationSearching(refs, dim, n, q, R, acc, M, PQ, knn);
             if(output) write_output(acc, n, f_out, knn, PQ);
             delete[] acc;
         }
@@ -370,7 +374,7 @@ int MSA(string s_in, string s_out, int output, int verbose, int time, int knn){
         }
     }
 
-    delete[] r;
+    delete[] R;
     delete[] M;
     f_in.close();
     
@@ -378,7 +382,7 @@ int MSA(string s_in, string s_out, int output, int verbose, int time, int knn){
 }
 
 //sequential scan
-int naive(string s_in, string s_out, int output, int verbose, int time, int knn){
+int naive(string s_in, string s_out, int output, int verbose, int time, int knn, int r){
 
     time_t t_start=0;
     clock_t c_start=0;
@@ -390,18 +394,19 @@ int naive(string s_in, string s_out, int output, int verbose, int time, int knn)
     
     f_in >> dim; //dimensoes
     f_in >> refs; //referencias (pivos)
+    if(r!=0 and r<refs) refs = r;
     f_in >> n; //objetos
     f_in >> num_q; //consultas
     
-    int *r = new int[dim * refs];    
-    for (int i = 0; i < dim * refs; i++) f_in >> r[i]; //referencias
+    int *R = new int[dim * refs];    
+    for (int i = 0; i < dim * refs; i++) f_in >> R[i]; //referencias
     
     //vector<int> *M = new vector<int>[refs];
     int *O = new int[n * refs];
     
     if(time) time_start(&t_start, &c_start);
     
-    fullSequentialIndexing(refs, dim, n, r, f_in, O);
+    fullSequentialIndexing(refs, dim, n, R, f_in, O);
 
     if(verbose)
         cout << "dim = " << dim << "; refs = " << refs << "; n = " << n  << "; q = " << num_q << endl;
@@ -438,7 +443,7 @@ int naive(string s_in, string s_out, int output, int verbose, int time, int knn)
             init_pq_fixed_size(PQ, knn);
             
             
-            fullSequentialSearching(refs, dim, n, q, r, acc, O, PQ, knn);
+            fullSequentialSearching(refs, dim, n, q, R, acc, O, PQ, knn);
             if(output) write_output(acc, n, f_out, knn, PQ);
             delete[] acc;
         }
@@ -451,7 +456,7 @@ int naive(string s_in, string s_out, int output, int verbose, int time, int knn)
         }
     }
 
-    delete[] r;
+    delete[] R;
     delete[] O;
     f_in.close();
     
@@ -554,7 +559,7 @@ int p(int* loi, int rj, int refs) {
     return -1;
 }
 
-void createOrderedList(int refs, int dim, int* oi, int* loi, int* r) {
+void createOrderedList(int refs, int dim, int* oi, int* loi, int* R) {
     
     struct Node *output = new struct Node[refs];
     double d, diff;
@@ -564,8 +569,8 @@ void createOrderedList(int refs, int dim, int* oi, int* loi, int* r) {
         d = 0;
         for (int kk = 0; kk < dim; kk++) {
             int oikk = oi[kk];
-            int coord = r[dim * i + kk];
-            diff = oi[kk] - r[dim * i + kk];
+            int coord = R[dim * i + kk];
+            diff = oi[kk] - R[dim * i + kk];
             d += diff * diff;
         }
         
