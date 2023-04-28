@@ -43,11 +43,12 @@ The next lines give the reference objects, objects and queries (all given as an 
 
 ```sh
 -A a  algorithm to use (default 2)
--o  output computed file
--t  time (seconds)
--k  knn-queries
--v  verbose output
--h  this help message
+-o    output computed file
+-t    time (seconds)
+-k K  knn-queries
+-r R  number of (used) references
+-v    verbose output
+-h    this help message
 ```
 
 ### Running example:
