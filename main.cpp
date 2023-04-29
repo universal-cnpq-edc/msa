@@ -657,7 +657,7 @@ void fullPermutationSearching(int refs, int dim, int n, int * q, int * refsR, st
       double Acc = 0.0;
       for (int j = 0; j < refs; j++) {
         
-        int refPosQ = p(loi, loi[j], refs);//?
+        int refPosQ = j; //p(loi, loi[j], refs);//?
         int bucket = loi[j];
         
         //int k = loi[j] * n + oid;
