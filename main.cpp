@@ -6,10 +6,10 @@
  * > mudar o bitset para vector<bool> - OK
  * > inverter looping busca (bucket->Oid para Oid->bucket) - OK
  * > usar PQ para evitar ACC[1..n] - OK
- * 
+ *
  * > usar sdsl para o bitvector
  * > usar sdsl para Elias?
- * 
+ *
  */
 
 /*
@@ -18,18 +18,19 @@
  * and open the template in the editor.
  */
 
-/* 
+/*
  * File:   main.cpp
  * Author: john
  *
  * Created on September 18, 2022, 4:48 PM
  */
 #ifndef DEBUG
-  #define DEBUG 0 
+  #define DEBUG 0
 #endif
 
 #include <cstdlib>
 #include <cstdio>
+#include <cmath>
 #include <unistd.h>
 #include <iostream>
 #include <fstream>
@@ -77,35 +78,43 @@ struct Decoded {
 };
 
 int p(int* loi, int rj, int refs);
-void fullPermutationIndexing(int refs, int dim, int n, int * refsR, int *offset, int *lastValues, std::fstream& f_in, vector<bool> *BS);
+void fullPermutationIndexing(int refs, int dim, int n, int * refsR, std::fstream& f_in, vector<bool> *BS);
 void fullPermutationIndexing(int refs, int dim, int n, int* refsR, std::fstream& f_in, int *M);
 void fullSequentialIndexing(int refs, int dim, int n, int* refsR, std::fstream& f_in, int *O);
 
 void createOrderedList(int refs, int dim, int* oi, int* loi, int* R);
+void createPositionList(int refs, int dim, int* oi, int* lpi, int* R);
 
 string bsToString(int index, int num, vector<bool> *BS);
 bool node_sorter(Node const& lhs, Node const& rhs);
 
-void fullPermutationSearching(int refs, int dim, int n, int * q, int * refsR, struct Node *acc, int* offset, vector<bool> *BS, priority_queue_Node &PQ, int knn);
+void fullPermutationSearching(int refs, int dim, int n, int * q, int * refsR, struct Node *acc, vector<bool> *BS, priority_queue_Node &PQ, int knn);
 void fullPermutationSearching(int refs, int dim, int n, int * q, int * refsR, struct Node *acc, int *M, priority_queue_Node &PQ, int knn);
 void fullSequentialSearching(int refs, int dim, int n, int * q, int * refsR, struct Node *acc, int *O, priority_queue_Node &PQ, int knn);
 
 void time_start(time_t *t_time, clock_t *c_clock);
 double time_stop(time_t t_time, clock_t c_clock);
 
+//unsigned char mask[]={0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01};  
+unsigned int mask[]={0x01, 0x2, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80, 0x100, 0x200, 0x400, 0x800, 0x1000, 0x2000, 0x4000, 0x8000, 0x10000, 0x20000, 0x40000, 0x80000, 0x100000, 0x200000, 0x400000, 0x800000, 0x1000000, 0x2000000, 0x4000000, 0x8000000, 0x10000000, 0x20000000, 0x40000000};  
+
 string toBinaryString(int decimal);
 string gammaEncode(int x);
-string deltaEncode(int x);
-int deltaEncode(int x, int index, int offset_value, vector<bool> *BS);
-Decoded deltaDecodeDiff(int bsindex, int index, int offset_value, vector<bool> *BS);
+
+int deltaEncodeInt(int x);
+int deltaEncode(int x, int index, vector<bool> *BS);
+Decoded deltaDecodeDiff(int bsindex, int index, vector<bool> *BS);
 int getInt(int bsindex, int start, int end, vector<bool> *BS);
 int indexOf(int bsindex, int startPos, int offset_value, vector<bool> *BS);
 
+#define bit_len(n) floor(log(n)/log(2))+1
+
+
 int write_output(struct Node *acc, int n, std::fstream& f_out, int knn, priority_queue_Node &PQ);
 
-int cMSA(string s_in, string s_out, int output, int verbose, int time, int knn, int r);
-int MSA(string s_in, string s_out, int output, int verbose, int time, int knn, int r);
-int naive(string s_in, string s_out, int output, int verbose, int time, int knn, int r);
+int cMSA(string s_in, string s_out, int output, int verbose, int time, int knn, int r, int num_o, int sel_q);
+int MSA(string s_in, string s_out, int output, int verbose, int time, int knn, int r, int num_o, int sel_q);
+int naive(string s_in, string s_out, int output, int verbose, int time, int knn, int r, int num_o, int sel_q);
 
 void push_pq_fixed_size(priority_queue_Node &PQ, Node tmp, int knn);
 void init_pq_fixed_size(priority_queue_Node &PQ, int knn);
@@ -125,18 +134,19 @@ void usage(char *name){
 
 int main(int argc, char** argv) {
 
+
     /**/
     extern char *optarg;
     extern int optind; //, opterr, optopt;
-  
-    int c=0, verbose=0, time=0, output=0, knn=0, r=0;
+
+    int c=0, verbose=0, time=0, output=0, knn=0, r=0, num_o=0, sel_q=0;
     int ALG=2;//Algorithm
-  
-    while ((c=getopt(argc, argv, "A:ovtk:r:h")) != -1) {
+
+    while ((c=getopt(argc, argv, "A:ovtk:r:n:q:h")) != -1) {
       switch (c)
       {
         case 'A':
-          ALG=(size_t)atoi(optarg); 
+          ALG=(size_t)atoi(optarg);
           break;
         case 'o':
           output++; break;
@@ -148,6 +158,10 @@ int main(int argc, char** argv) {
           knn=(size_t)atoi(optarg);  break;
         case 'r':
           r=(size_t)atoi(optarg);  break;
+        case 'n':
+          num_o=(size_t)atoi(optarg);  break;
+        case 'q':
+          sel_q=(size_t)atoi(optarg);  break;
         case 'h':
           usage(argv[0]); break;       // show usage and stop
         case '?':
@@ -155,14 +169,14 @@ int main(int argc, char** argv) {
       }
     }
     free(optarg);
-    
+
     string s_in;
     if(optind+1==argc)
         s_in = argv[optind++];
-    else 
+    else
         usage(argv[0]);
     /**/
-    
+
     string s_out;
     if(output){
       size_t i = s_in.rfind('.', s_in.length());
@@ -171,19 +185,19 @@ int main(int argc, char** argv) {
       else
         s_out = s_in.substr(0, i) + ".out";
     }
-    
+
     switch(ALG){
-        case 0: 
+        case 0:
             cout<<"## naive ##"<<endl;//no compression
-            naive(s_in, s_out, output, verbose, time, knn, r);
+            naive(s_in, s_out, output, verbose, time, knn, r, num_o, sel_q);
             break;
-        case 1: 
+        case 1:
             cout<<"## MSA ##"<<endl;//no compression
-            MSA(s_in, s_out, output, verbose, time, knn, r);
+            MSA(s_in, s_out, output, verbose, time, knn, r, num_o, sel_q);
             break;
-        case 2: 
+        case 2:
             cout<<"## cMSA ##"<<endl;
-            cMSA(s_in, s_out, output, verbose, time, knn, r);
+            cMSA(s_in, s_out, output, verbose, time, knn, r, num_o, sel_q);
             break;
         default:
             exit(EXIT_FAILURE);
@@ -192,44 +206,57 @@ int main(int argc, char** argv) {
     return 0;
 }
 
-int cMSA(string s_in, string s_out, int output, int verbose, int time, int knn, int r){
+int cMSA(string s_in, string s_out, int output, int verbose, int time, int knn, int r, int num_o, int sel_q){
 
     time_t t_start=0;
     clock_t c_start=0;
-    
+
     std::fstream f_in(s_in, std::ios_base::in);
     if(!f_in.is_open()) exit(EXIT_FAILURE);
 
-    
+
     int dim, refs, n, num_q;
-    
+
     f_in >> dim; //dimensoes
     f_in >> refs; //referencias (pivos)
-    if(r!=0 and r<refs) refs = r;
+    //if(r!=0 and r<refs) refs = r;
     f_in >> n; //objetos
     f_in >> num_q; //consultas
     
-    int *R = new int[dim * refs];    
+    /********************/
+    if (r != 0) {
+        if (r > refs) n = n - (r - refs);
+        refs = r;
+    }
+    
+    if (sel_q != 0) {
+        if (sel_q > num_q) n = n - (sel_q - num_q);
+        num_q = sel_q;
+    }
+    
+    if (num_o != 0 and num_o < n) n = num_o;
+    /********************/
+
+    int *R = new int[dim * refs];
     for (int i = 0; i < dim * refs; i++) f_in >> R[i]; //referencias
-    
-    int *offset = new int[refs]; 
-    int *lastValues = new int[refs];
-    
+
+    //int *offset = new int[refs];
+
     //bitset<BSSIZE> *bs = new bitset<BSSIZE>[refs]; // MSIZE = n ?
     vector<bool> *BS = new vector<bool>[refs];
-    
+
     /*
     int *o = new int[dim * n]; //objetos
-    for (int i = 0; i < dim * n; i++) f_in >> o[i]; 
+    for (int i = 0; i < dim * n; i++) f_in >> o[i];
     */
-    
+
     if(time) time_start(&t_start, &c_start);
-    
-    fullPermutationIndexing(refs, dim, n, R, offset, lastValues, f_in, BS);
-    
+
+    fullPermutationIndexing(refs, dim, n, R, f_in, BS);
+
     /**/
     //delete[] o;
-    delete[] lastValues;
+    //delete[] lastValues;
     /**/
 
     if(verbose)
@@ -240,33 +267,36 @@ int cMSA(string s_in, string s_out, int output, int verbose, int time, int knn, 
       cout << "Indexing:" << endl;
       time_stop(t_start, c_start);
     }
-    
+
     int len = 0;
     for (int i = 0; i < refs; i++) {
-        len += offset[i];
+        //len += offset[i];
+        len += BS[i].size();
     }
     cout << "Encoded size (bits) = " << len << endl;
     cout << "########" <<endl;
 
     #if DEBUG
+    /*
     for (int i = 0; i < refs; i++) {
         cout << bsToString(i, offset[i]);
-    }   
+    }
     cout << endl;
+    */
     #endif
-    
+
     if(knn>0){//knn queries
-      
-       
+
+
         std::fstream f_out;
         if(output){
-          f_out.open(s_out, std::ios_base::out);  
+          f_out.open(s_out, std::ios_base::out);
           if(!f_out.is_open()) exit(EXIT_FAILURE);
           if(verbose) cout << s_out <<endl;
         }
-               
+
         if(time) time_start(&t_start, &c_start);
-        
+
         for (int i = 0; i < num_q; i++) {
 
             int q[dim];
@@ -277,14 +307,14 @@ int cMSA(string s_in, string s_out, int output, int verbose, int time, int knn, 
             struct Node *acc = NULL;
             priority_queue_Node PQ;
             init_pq_fixed_size(PQ, knn);
-            
-            fullPermutationSearching(refs, dim, n, q, R, acc, offset, BS, PQ, knn);
+
+            fullPermutationSearching(refs, dim, n, q, R, acc, BS, PQ, knn);
             if(output) write_output(acc, n, f_out, knn, PQ);
             delete[] acc;
         }
-        
+
         if(output) f_out.close();
-        
+
         if(time){
           cout << "Searching:" << endl;
           time_stop(t_start, c_start);
@@ -292,38 +322,52 @@ int cMSA(string s_in, string s_out, int output, int verbose, int time, int knn, 
     }
 
     delete[] R;
-    delete[] offset;
+    //delete[] offset;
     //delete[] bs;
-    delete[] BS;    
+    delete[] BS;
     f_in.close();
-    
+
     return 0;
 }
 
-int MSA(string s_in, string s_out, int output, int verbose, int time, int knn, int r){
+int MSA(string s_in, string s_out, int output, int verbose, int time, int knn, int r, int num_o, int sel_q){
 
     time_t t_start=0;
     clock_t c_start=0;
-    
+
     std::fstream f_in(s_in, std::ios_base::in);
     if(!f_in.is_open()) exit(EXIT_FAILURE);
-    
+
     int dim, refs, n, num_q;
-    
+
     f_in >> dim; //dimensoes
     f_in >> refs; //referencias (pivos)
-    if(r!=0 and r<refs) refs = r;
+    //if(r!=0 and r<refs) refs = r;
     f_in >> n; //objetos
     f_in >> num_q; //consultas
     
-    int *R = new int[dim * refs];    
-    for (int i = 0; i < dim * refs; i++) f_in >> R[i]; //referencias
+    /********************/
+    if (r != 0) {
+        if (r > refs) n = n - (r - refs);
+        refs = r;
+    }
     
+    if (sel_q != 0) {
+        if (sel_q > num_q) n = n - (sel_q - num_q);
+        num_q = sel_q;
+    }
+    
+    if (num_o != 0 and num_o < n) n = num_o;
+    /********************/
+
+    int *R = new int[dim * refs];
+    for (int i = 0; i < dim * refs; i++) f_in >> R[i]; //referencias
+
     //vector<int> *M = new vector<int>[refs];
     int *M = new int[n * refs];
-    
+
     if(time) time_start(&t_start, &c_start);
-    
+
     fullPermutationIndexing(refs, dim, n, R, f_in, M);
 
     if(verbose)
@@ -334,21 +378,21 @@ int MSA(string s_in, string s_out, int output, int verbose, int time, int knn, i
       cout << "Indexing:" << endl;
       time_stop(t_start, c_start);
     }
-    
+
     cout << "Encoded size (bits) = " << n * refs * 32 << endl;
     cout << "########" <<endl;
-    
+
     if(knn>0){//knn queries
-              
+
         std::fstream f_out;
         if(output){
-          f_out.open(s_out, std::ios_base::out);  
+          f_out.open(s_out, std::ios_base::out);
           if(!f_out.is_open()) exit(EXIT_FAILURE);
           if(verbose) cout << s_out <<endl;
         }
-               
+
         if(time) time_start(&t_start, &c_start);
-        
+
         for (int i = 0; i < num_q; i++) {
 
             int q[dim];
@@ -359,15 +403,15 @@ int MSA(string s_in, string s_out, int output, int verbose, int time, int knn, i
             struct Node *acc = NULL;
             priority_queue_Node PQ;
             init_pq_fixed_size(PQ, knn);
-            
-            
+
+
             fullPermutationSearching(refs, dim, n, q, R, acc, M, PQ, knn);
             if(output) write_output(acc, n, f_out, knn, PQ);
             delete[] acc;
         }
-        
+
         if(output) f_out.close();
-        
+
         if(time){
           cout << "Searching:" << endl;
           time_stop(t_start, c_start);
@@ -377,35 +421,49 @@ int MSA(string s_in, string s_out, int output, int verbose, int time, int knn, i
     delete[] R;
     delete[] M;
     f_in.close();
-    
+
     return 0;
 }
 
 //sequential scan
-int naive(string s_in, string s_out, int output, int verbose, int time, int knn, int r){
+int naive(string s_in, string s_out, int output, int verbose, int time, int knn, int r, int num_o, int sel_q){
 
     time_t t_start=0;
     clock_t c_start=0;
-    
+
     std::fstream f_in(s_in, std::ios_base::in);
     if(!f_in.is_open()) exit(EXIT_FAILURE);
-    
+
     int dim, refs, n, num_q;
-    
+
     f_in >> dim; //dimensoes
     f_in >> refs; //referencias (pivos)
-    if(r!=0 and r<refs) refs = r;
+    //if(r!=0 and r<refs) refs = r;
     f_in >> n; //objetos
     f_in >> num_q; //consultas
     
-    int *R = new int[dim * refs];    
-    for (int i = 0; i < dim * refs; i++) f_in >> R[i]; //referencias
+    /********************/
+    if (r != 0) {
+        if (r > refs) n = n - (r - refs);
+        refs = r;
+    }
     
+    if (sel_q != 0) {
+        if (sel_q > num_q) n = n - (sel_q - num_q);
+        num_q = sel_q;
+    }
+    
+    if (num_o != 0 and num_o < n) n = num_o;
+    /********************/
+
+    int *R = new int[dim * refs];
+    for (int i = 0; i < dim * refs; i++) f_in >> R[i]; //referencias
+
     //vector<int> *M = new vector<int>[refs];
     int *O = new int[n * refs];
-    
+
     if(time) time_start(&t_start, &c_start);
-    
+
     fullSequentialIndexing(refs, dim, n, R, f_in, O);
 
     if(verbose)
@@ -416,21 +474,21 @@ int naive(string s_in, string s_out, int output, int verbose, int time, int knn,
       cout << "Indexing:" << endl;
       time_stop(t_start, c_start);
     }
-    
+
     cout << "Encoded size (bits) = " << n * refs * 32 << endl;
     cout << "########" <<endl;
-    
+
     if(knn>0){//knn queries
-              
+
         std::fstream f_out;
         if(output){
-          f_out.open(s_out, std::ios_base::out);  
+          f_out.open(s_out, std::ios_base::out);
           if(!f_out.is_open()) exit(EXIT_FAILURE);
           if(verbose) cout << s_out <<endl;
         }
-               
+
         if(time) time_start(&t_start, &c_start);
-        
+
         for (int i = 0; i < num_q; i++) {
 
             int q[dim];
@@ -441,15 +499,15 @@ int naive(string s_in, string s_out, int output, int verbose, int time, int knn,
             struct Node *acc = NULL;
             priority_queue_Node PQ;
             init_pq_fixed_size(PQ, knn);
-            
-            
+
+
             fullSequentialSearching(refs, dim, n, q, R, acc, O, PQ, knn);
             if(output) write_output(acc, n, f_out, knn, PQ);
             delete[] acc;
         }
-        
+
         if(output) f_out.close();
-        
+
         if(time){
           cout << "Searching:" << endl;
           time_stop(t_start, c_start);
@@ -459,132 +517,165 @@ int naive(string s_in, string s_out, int output, int verbose, int time, int knn,
     delete[] R;
     delete[] O;
     f_in.close();
-    
+
     return 0;
 }
 
-void fullPermutationIndexing(int refs, int dim, int n, int* refsR, int *offset, int *lastValues, std::fstream& f_in, vector<bool> *BS) {
-    
+void fullPermutationIndexing(int refs, int dim, int n, int* refsR, std::fstream& f_in, vector<bool> *BS) {
+
     //bs = new BitSet[n];
     //offset = new int[n];
     //lastValues = new int[n];
+    int *lastValues = new int[refs];
 
-    int *loi = new int[refs];
+    int *lpi = new int[refs];
     int *oi = new int[dim]; //objeto
-    
+
     for (int i = 0; i < n; i++) {
-        
+
         //int oi[dim];
         for (int kk = 0; kk < dim; kk++) {
             //oi[kk] = domainD[dim * i + kk]; //objeto da lista
             f_in >> oi[kk];
         }
+
+        createPositionList(refs, dim, oi, lpi, refsR);
+
         
-        createOrderedList(refs, dim, oi, loi, refsR);
-        
-          
         for (int j = 0; j < refs; j++) {
-            int value = i * refs + p(loi, j, refs) + 1;
-            
-            if (offset[j] == 0) {//proprio valor
+            //int value = i * refs + p(lpi, j, refs) + 1;
+            int value = i * refs + lpi[j] + 1;
+
+            //if (offset[j] == 0) {//proprio valor
+            if (i == 0) {//proprio valor
                 lastValues[j] = value;
-                offset[j] = deltaEncode(value, j, offset[j], BS);
+                //offset[j] += deltaEncode(value, j, BS);
+                deltaEncode(value, j, BS);
             } else { //um lastValues e offset para cada referencia
                 int diff = value - lastValues[j];
                 lastValues[j] = value;
-                offset[j] = deltaEncode(diff, j, offset[j], BS);
+                //offset[j] += deltaEncode(diff, j, BS);
+                deltaEncode(diff, j, BS);
             }
         }
-        
+
     }
     delete[] oi;
-    delete[] loi;
-    
+    delete[] lpi;
+    delete[] lastValues;
+
 }
 
 void fullPermutationIndexing(int refs, int dim, int n, int* refsR, std::fstream& f_in, int* M) {
-    
+
     int *loi = new int[refs];
     int *oi = new int[dim]; //objeto
-    
+
     for (int i = 0; i < n; i++) {
-        
+
         for (int kk = 0; kk < dim; kk++) {
             f_in >> oi[kk];
         }
-        
+
         createOrderedList(refs, dim, oi, loi, refsR);
-        
+
         for (int j = 0; j < refs; j++) {
             M[j * n + i] = i * refs + p(loi, j, refs);
         }
-        
+
     }
     delete[] oi;
     delete[] loi;
-    
+
 }
 
 void fullSequentialIndexing(int refs, int dim, int n, int* refsR, std::fstream& f_in, int* O) {
-    
+
     int *loi = new int[refs];
     int *oi = new int[dim]; //objeto
-    
+
     for (int i = 0; i < n; i++) {
-        
+
         for (int kk = 0; kk < dim; kk++) {
             f_in >> oi[kk];
         }
-        
+
         createOrderedList(refs, dim, oi, loi, refsR);
-        
+
         for (int j = 0; j < refs; j++) {
             O[i * refs + j] = loi[j];
         }
-        
+
     }
     delete[] oi;
     delete[] loi;
-    
+
 }
 
 int p(int* loi, int rj, int refs) {
-    
+
     for (int i = 0; i < refs; i++) {
         if (loi[i] == rj) {
             return i;
         }
     }
-    
+
     return -1;
 }
 
 void createOrderedList(int refs, int dim, int* oi, int* loi, int* R) {
-    
+
     struct Node *output = new struct Node[refs];
     double d, diff;
-    
+
     for (int i = 0; i < refs; i++) {
-        
+
         d = 0;
         for (int kk = 0; kk < dim; kk++) {
-            int oikk = oi[kk];
-            int coord = R[dim * i + kk];
+
             diff = oi[kk] - R[dim * i + kk];
             d += diff * diff;
         }
-        
+
         struct Node tmp = {i, d};
         output[i] = tmp;
     }
-    
+
     // efetua a ordenação
     std::sort(output, output + refs, &node_sorter);
-    
+
     for (int i = 0; i < refs; i++) {
         loi[i] = output[i].i;
     }
-    
+
+    delete[] output;
+}
+
+void createPositionList(int refs, int dim, int* oi, int* lpi, int* R) {
+
+    struct Node *output = new struct Node[refs];
+    double d, diff;
+
+    for (int i = 0; i < refs; i++) {
+
+        d = 0;
+        for (int kk = 0; kk < dim; kk++) {
+            
+            diff = oi[kk] - R[dim * i + kk];
+            d += diff * diff;
+        }
+
+        struct Node tmp = {i, d};
+        output[i] = tmp;
+    }
+
+    // efetua a ordenação
+    std::sort(output, output + refs, &node_sorter);
+
+    for (int i = 0; i < refs; i++) {
+        lpi[output[i].i] = i;
+    }
+
     delete[] output;
 }
 
@@ -611,8 +702,8 @@ bool node_sorter(Node const& lhs, Node const& rhs) {
 
 }
 
-void fullPermutationSearching(int refs, int dim, int n, int * q, int * refsR, struct Node *acc, int* offset, vector<bool> *BS, priority_queue_Node &PQ, int knn) {
-    
+void fullPermutationSearching(int refs, int dim, int n, int * q, int * refsR, struct Node *acc, vector<bool> *BS, priority_queue_Node &PQ, int knn) {
+
     //int_t t1 = time_start();
     /*
     for (int j = 0; j < n; j++) {
@@ -620,30 +711,30 @@ void fullPermutationSearching(int refs, int dim, int n, int * q, int * refsR, st
         acc[j] = tmp;
     }
     */
-    
-    
+
+
     int *loi = new int[refs];
     createOrderedList(refs, dim, q, loi, refsR);
-    
+
     /*
     for (int j = 0; j < refs; j++) {
-        
+
         int refPosQ = p(loi, loi[j], refs);
         int oid = 0;
         int bucket = loi[j];
-        
+
         int msa_k = 0;
         int index = 0;
-        
+
         for (int k = loi[j] * n; k < loi[j] * n + n; k++) {
-            
+
             Decoded tmp = deltaDecodeDiff(bucket, index, offset[bucket], BS);
             msa_k += tmp.value;
             index = tmp.position;
 
             int refPos = msa_k % refs;
             acc[oid].d += abs(refPosQ - refPos);
-            oid++; 
+            oid++;
         }
     }
     */
@@ -652,37 +743,39 @@ void fullPermutationSearching(int refs, int dim, int n, int * q, int * refsR, st
     int *Index = new int[refs];
     for (int j = 0; j < refs; j++) Index[j] = MSA_k[j] = 0;
     /**/
-    
+
     for (int oid = 0; oid < n; oid++) {
       double Acc = 0.0;
       for (int j = 0; j < refs; j++) {
-        
+
         int refPosQ = j; //p(loi, loi[j], refs);//?
         int bucket = loi[j];
-        
+
         //int k = loi[j] * n + oid;
-       
-        Decoded tmp = deltaDecodeDiff(bucket, Index[j], offset[bucket], BS);
+
+        //Decoded tmp = deltaDecodeDiff(bucket, Index[j], offset[bucket], BS);
+        Decoded tmp = deltaDecodeDiff(bucket, Index[j], BS);
+        //cout<<tmp.value<<" "<<tmp.position<<endl;
         MSA_k[j] += tmp.value;
         Index[j] = tmp.position;
 
         int refPos = MSA_k[j] % refs;
         Acc += abs(refPosQ - refPos);
       }
-      
+
       struct Node tmp = {oid, Acc};
-      push_pq_fixed_size(PQ, tmp, knn);                
-      //acc[oid].d = Acc; 
+      push_pq_fixed_size(PQ, tmp, knn);
+      //acc[oid].d = Acc;
     }
-    
+
     delete[] MSA_k;
     delete[] Index;
-    
+
     delete[] loi;
 }
 
 void fullPermutationSearching(int refs, int dim, int n, int * q, int * refsR, struct Node *acc, int* M, priority_queue_Node &PQ, int knn) {
-    
+
     //int_t t1 = time_start();
     /*
     for (int j = 0; j < n; j++) {
@@ -700,15 +793,15 @@ void fullPermutationSearching(int refs, int dim, int n, int * q, int * refsR, st
         for (int k = loi[j] * n; k < loi[j] * n + n; k++) {
             int refPos = M[k] % refs;
             acc[oid].d += abs(refPosQ - refPos);
-            oid++; 
+            oid++;
         }
     }
     */
-    
+
     for (int oid = 0; oid < n; oid++) {
         double Acc = 0.0;
         for( int j = 0; j < refs; j++) {
-        
+
           int refPosQ = j;
           int k = loi[j] * n + oid;
           int refPos = M[k] % refs;
@@ -716,34 +809,34 @@ void fullPermutationSearching(int refs, int dim, int n, int * q, int * refsR, st
           //acc[oid].d += abs(refPosQ - refPos);
           Acc += abs(refPosQ - refPos);
         }
-        
+
         struct Node tmp = {oid, Acc};
-        push_pq_fixed_size(PQ, tmp, knn);                
+        push_pq_fixed_size(PQ, tmp, knn);
         //acc[oid].d = Acc;
     }
-    
+
     delete[] loi;
 }
 
-void fullSequentialSearching(int refs, int dim, int n, int * q, int * refsR, struct Node *acc, int *O, priority_queue_Node &PQ, int knn){    
+void fullSequentialSearching(int refs, int dim, int n, int * q, int * refsR, struct Node *acc, int *O, priority_queue_Node &PQ, int knn){
 
     int *loi = new int[refs];
     createOrderedList(refs, dim, q, loi, refsR);
-    
+
     for (int oid = 0; oid < n; oid++) {
         double Acc = 0.0;
         for( int j = 0; j < refs; j++) {
-        
+
           int refPosQ = j;
           int refPos = p(O+oid*refs, loi[j], refs);
 
           Acc += abs(refPosQ - refPos);
         }
-        
+
         struct Node tmp = {oid, Acc};
-        push_pq_fixed_size(PQ, tmp, knn);                
+        push_pq_fixed_size(PQ, tmp, knn);
     }
-    
+
     delete[] loi;
 }
 
@@ -758,7 +851,7 @@ void push_pq_fixed_size(priority_queue_Node &PQ, Node tmp, int knn){
       PQ.pop();
       PQ.push(tmp);
     }
-  }  
+  }
 */
   if(tmp.d < PQ.top().d){
     PQ.pop();
@@ -795,7 +888,7 @@ string toBinaryString(int decimal) {
     if (decimal == 0) return "0";
     int rem;
     string binary = "";
-    
+
     while (decimal != 0) {
         rem = decimal % 2;
         binary = to_string(rem) + binary;
@@ -807,12 +900,12 @@ string toBinaryString(int decimal) {
 string gammaEncode(int x) {
 
     string bin = toBinaryString(x);
-
     string out = "";
-
     for (long unsigned i = 0; i < bin.length() - 1; i++) {
         out += "0";
     }
+    //cout << out<<" "<<bin<< "("<<out+bin<< ")\t";
+    //bit_len(x);
 
     return out + bin;
 }
@@ -821,26 +914,63 @@ string deltaEncode(int x) {
 
     string bin = toBinaryString(x);
     string out = gammaEncode(bin.length());
-
+    
     out += bin.substr(1);
 
     return out;
-
 }
 
-int deltaEncode(int x, int index, int offset_value, vector<bool> *BS) {
+int deltaEncodeInt(int x) {
 
+    int y = bit_len(x);
+    x &= ~mask[y-1];
+
+    int l = bit_len(y)-1;    
+    y = y << (y-1);
+    y |= x;
+    
+    l += bit_len(y);
+
+    //add bit 1 on (l+1)-th bit
+    y = y|mask[l];
+
+    //cout<<toBinaryString(y)<<endl;
+
+    return y;
+}
+
+int deltaEncode(int x, int index, vector<bool> *BS) {
+
+    /*
     string output = deltaEncode(x);
 
     for (long unsigned i = 0; i < output.length(); i++) {
         BS[index].push_back(output[i]=='1'?1:0);
     }
-
     return offset_value + output.length();
+    */
+
+    int output = deltaEncodeInt(x);
+    int len = bit_len(output)-1;
+
+    /*
+    cout<<x<<"\t";
+    cout<<toBinaryString(x)<<"\t";
+    cout<<toBinaryString(output)<<endl;
+    */
+    
+    for (int i = len-1; i >= 0; i--) {
+        //cout<<toBinaryString((output&mask[i])>>i)<<" ";
+        BS[index].push_back((output&mask[i])>>i);
+    }
+    //cout<<endl;
+    return len;
 }
 
-Decoded deltaDecodeDiff(int bsindex, int index, int offset_value, vector<bool> *BS) {
-
+Decoded deltaDecodeDiff(int bsindex, int index,  vector<bool> *BS) {
+/*
+    int offset_value = BS[bsindex].size();
+    
     int pos = indexOf(bsindex, index, offset_value, BS) - index;
     pos += pos;
 
@@ -855,8 +985,47 @@ Decoded deltaDecodeDiff(int bsindex, int index, int offset_value, vector<bool> *
         struct Decoded tmp = {number - 1, index + pos + n0 + 1};
         return tmp;
     }
-
     struct Decoded tmp = {number, index + pos + n0 + 1};
+    return tmp;
+
+*/
+    int pos = index;
+    
+    int i=0;
+    while(BS[bsindex][index]!=1){
+        //cout<<BS[bsindex][index]<<" ";
+        index++;
+        i++;
+    }
+    //cout<<"| ";
+    
+    int l = 0;
+    while(i >= 0){
+      //cout<<BS[bsindex][index]<<" ";
+      l |= (BS[bsindex][index])<<i;
+      index++;
+      i--;
+    }
+    
+    //cout<<"["<<l<<"] | ";
+    
+    int y = 0;
+    y |= 1<<(l-1);
+    
+    //cout<<"("<<toBinaryString(y)<<") | ";
+    
+    l--;
+    while(l > 0){
+      //cout<<BS[bsindex][index]<<" ";
+      y |= (BS[bsindex][index])<<(l-1);
+      index++;
+      l--;
+    }
+    
+    //cout<<"\t# "<<y<<" #\t"<<toBinaryString(y)<<"\t("<<index<<")"<<endl;
+    
+    if(pos==0) y--;//???
+    struct Decoded tmp = {y,index};
     return tmp;
 
 }
@@ -880,17 +1049,17 @@ int indexOf(int bsindex, int startPos, int offset_value, vector<bool> *BS) {
     }
     return -1;
 }
- 
+
 int write_output(struct Node *acc, int n, std::fstream& f_out, int knn, priority_queue_Node &PQ){
-    
+
     /*
-    std::sort(acc, acc + n, &node_sorter);    
+    std::sort(acc, acc + n, &node_sorter);
     //for (int i = 0; i < n; i++) {
     int k = min(knn,n);
     for (int i = 0; i < k; i++) {
-      f_out << acc[i].i << " "; 
+      f_out << acc[i].i << " ";
     }
-    f_out << endl; 
+    f_out << endl;
     */
     //invert the PQ
     stack<Node> S;
@@ -904,6 +1073,6 @@ int write_output(struct Node *acc, int n, std::fstream& f_out, int knn, priority
         f_out << acc.i << " ";
     }
     f_out << endl;
-  
+
 return 0;
 }
