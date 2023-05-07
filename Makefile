@@ -1,5 +1,5 @@
 CC=g++
-CFLAGS= -Wall -Werror -lm -ldl -Wno-unused-variable
+CFLAGS= -Wall -Werror -lm -ldl -Wno-unused-variable -O3
 
 DEBUG = 0
 LIBOBJ = external/malloc_count/malloc_count.o

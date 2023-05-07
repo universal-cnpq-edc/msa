@@ -38,7 +38,7 @@
 #include <vector>
 #include <queue>
 #include <stack>
-#include <cfloat>
+#include <cfloat>  
 #include "external/malloc_count/malloc_count.h"
 
 
@@ -273,7 +273,8 @@ int cMSA(string s_in, string s_out, int output, int verbose, int time, int knn, 
         //len += offset[i];
         len += BS[i].size();
     }
-    cout << "Encoded size (bits) = " << len << endl;
+    //cout << "Encoded size (bits) = " << len << endl;
+    cout << "Encoded size (bytes) = " << int(len/8) << endl;
     cout << "########" <<endl;
 
     #if DEBUG
@@ -379,7 +380,8 @@ int MSA(string s_in, string s_out, int output, int verbose, int time, int knn, i
       time_stop(t_start, c_start);
     }
 
-    cout << "Encoded size (bits) = " << n * refs * 32 << endl;
+    //cout << "Encoded size (bits) = " << n * refs * 32 << endl;
+    cout << "Encoded size (bytes) = " << int(n * refs * 32/8) << endl;
     cout << "########" <<endl;
 
     if(knn>0){//knn queries
@@ -475,7 +477,8 @@ int naive(string s_in, string s_out, int output, int verbose, int time, int knn,
       time_stop(t_start, c_start);
     }
 
-    cout << "Encoded size (bits) = " << n * refs * 32 << endl;
+    //cout << "Encoded size (bits) = " << n * refs * 32 << endl;
+    cout << "Encoded size (bytes) = " << int(n * refs * 32/8) << endl;
     cout << "########" <<endl;
 
     if(knn>0){//knn queries
