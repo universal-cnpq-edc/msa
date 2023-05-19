@@ -79,8 +79,9 @@ int main(int argc, char** argv) {
     
     int **objects = getobjects(datafile_in);
 
-    float d, maxdist;
-    float avgmaxdist = 0;
+    float d, maxdist, exactmaxdist;
+    float avgmaxdist = 0, avgexactmaxdist = 0;
+
     int avg_position_farthest = 0;
 
     // for each query
@@ -93,6 +94,10 @@ int main(int argc, char** argv) {
             if (d > maxdist)
                 maxdist = d;
         }
+        
+        // distancia do k-esimo na consulta exata
+        exactmaxdist = distance(queries[i], objects[ exact_ids[i][ k-1 ] ], dim);
+        avgexactmaxdist += exactmaxdist;
        
         // fazer consulta por abrangência exata com raio r para computar quantos elementos precisa
         int count = 0;
@@ -115,10 +120,11 @@ int main(int argc, char** argv) {
         avgmaxdist += maxdist;
         avg_position_farthest += count;
     }
-    // compute average
+    // compute averages
+    avgexactmaxdist /= num_q;
     avgmaxdist /= num_q;
     avg_position_farthest /= num_q;
-    printf("average maxdist %.1f -- the farthest obj found by the approximate %d-NN is on avg the %d-th nearest neighbor\n", avgmaxdist, k, avg_position_farthest);
+    printf("avg maxdist exact %.1f approx %.1f \nfarthest obj found by approx %d-NN is on avg the %d-th nearest neighbor\n\n\n", avgexactmaxdist, avgmaxdist, k, avg_position_farthest);
     
     return 0;
 }
@@ -139,6 +145,7 @@ void compareanwers(int **exact_ids, int **approx_ids, int num_q, int k) {
                 if (exact_ids[i][j] == approx_ids[i][m]) {
                     correct_count++;
                     correct_counts[i]++;
+                    break;
                 }
             }
         }
@@ -150,7 +157,7 @@ void compareanwers(int **exact_ids, int **approx_ids, int num_q, int k) {
     for (int i = 0; i < num_q; i++)
         squared_sum += (perc - percs[i]) * (perc - percs[i]);
     sttdev = sqrt(squared_sum / num_q);
-    printf("avg and stddev correct answers of the approximate query compared to the exact query: avg %.1f%% stddev %f%%\n", perc, sttdev);
+    printf("approx compared to exact queries: avg %.1f%% stddev %f%% correct results\n", perc, sttdev);
 
     return;    
 }
@@ -257,3 +264,32 @@ int **getqueries(string s_in, int *dim, int *refs, int *n, int *num_q) {
 
     return queries;
 }
+
+/*
+
+==============
+
+    if (r != 0) {
+        if (r > refs) n = n - (r - refs);
+        refs = r;
+    } 
+
+==============
+por 
+==============
+ 
+    int datasetrefs;
+    if (r != 0) {
+        if (r > refs) { cout << "cannot run with this number of references (value is greater than the number of references in the datafile" << endl; exit(0); };
+
+        datasetrefs = refs;
+        refs = r;
+
+        // let's ignore the first (datasetrefs - refs) references
+        int ignore;
+        for (int i = 0; i < dim * (datasetrefs - refs); i++) f_in >> ignore; //referencias
+    }
+ 
+==============
+
+ */ 
