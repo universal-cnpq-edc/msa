@@ -346,7 +346,7 @@ static __attribute__((constructor)) void init(void)
 
 static __attribute__((destructor)) void finish(void)
 {
-    fprintf(stderr, PPREFIX
+    fprintf(stdout, PPREFIX
             "exiting, total: %'lld, peak: %'lld, current: %'lld\n",
             total, peak, curr);
 }
