@@ -14,13 +14,17 @@ int main(int argc, char** argv){
   if(argc!=2) return 1;
   int n = atoi(argv[1]); //number of bits
 
+  //initialize with zeros
   unsigned char *B = new unsigned char[n/8+1]; 
+  for(int i=0; i<n/8+1; i++) B[i]=0;
 
+  //add 1-bits randomly
   for(int i=0; i<n; i++){
     int r = rand()%2;
     if(r==1) bit_set(i, 1);
   }
 
+  //print the bitset
   for(int i=0; i<n; i++){
     cout<<bit_get(i);
   }
