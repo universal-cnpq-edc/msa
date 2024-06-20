@@ -1,17 +1,28 @@
-CC=g++
+CC=g++ -std=c++11
+LIB_DIR = ${HOME}/lib
+INC_DIR = ${HOME}/include
+
+CCLIB=  -I$(INC_DIR) -L$(LIB_DIR) -lsdsl -ldivsufsort -ldivsufsort64
 CFLAGS= -Wall -Werror -lm -ldl -Wno-unused-variable -O3
+#CFLAGS= -O0 -g -lm -ldl
+
+SDSL = 0
+DEFINES = -DDEBUG=$(DEBUG) -DSDSL=$(SDSL)
+
+ifeq ($(SDSL),1)
+DEFINES += $(CCLIB)
+endif
 
 DEBUG = 0
 LIBOBJ = external/malloc_count/malloc_count.o
 
-DEFINES = -DDEBUG=$(DEBUG)
 
 DATA = dataset/input3.txt
 
 all: main 
 
-main: main.cpp $(LIBOBJ) -ldl
-	$(CC) $(CFLAGS) $(DEFINES) $^ -o $@
+main: main.cpp $(LIBOBJ)
+	$(CC) $(CFLAGS) $^  $(DEFINES) -o $@
 
 %.o: %.c %.h
 	gcc -c $< -o $@

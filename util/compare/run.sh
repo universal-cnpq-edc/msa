@@ -12,8 +12,8 @@ if [[ $# -ne 3 ]]; then
 fi
 
 echo "=========================================="
-echo "../exact/exact ../../dataset/$1 -t -k 10 -o -A -1"
-../exact/exact ../../dataset/$1.txt -t -k $3 -o -A -1
+echo "../../main ../../dataset/$1.txt -t -k $3 -o -r $2 -A -1"
+../../main ../../dataset/$1.txt -t -k $3 -o -r $2 -A -1
 mv ../../dataset/$1.out ../../dataset/$1.exact.out
 
 echo "=========================================="
@@ -21,12 +21,12 @@ echo "../../main ../../dataset/$1.txt -t -k $3 -o -r $2 -A 2"
 ../../main ../../dataset/$1.txt -t -k $3 -o -r $2 -A 2
 mv ../../dataset/$1.out ../../dataset/$1.cmsa.out
 
-#echo "=========================================="
-#echo "head ../../dataset/$1.exact.out"
-#head ../../dataset/$1.exact.out
-#echo "=========================================="
-#echo "head ../../dataset/$1.cmsa.out"
-#head ../../dataset/$1.cmsa.out
+echo "=========================================="
+echo "head ../../dataset/$1.exact.out"
+head ../../dataset/$1.exact.out
+echo "=========================================="
+echo "head ../../dataset/$1.cmsa.out"
+head ../../dataset/$1.cmsa.out
 
 echo "=========================================="
 ./compare ../../dataset/$1.txt ../../dataset/$1.exact.out ../../dataset/$1.cmsa.out
