@@ -10,7 +10,7 @@ DATA = dataset/input3.txt
 
 all: main 
 
-main: main.cpp $(LIBOBJ)
+main: main.cpp $(LIBOBJ) -ldl
 	$(CC) $(CFLAGS) $(DEFINES) $^ -o $@
 
 %.o: %.c %.h
