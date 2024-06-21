@@ -19,7 +19,7 @@ mv ../../dataset/$1.out ../../dataset/$1.exact.out
 
 echo "=========================================="
 echo "../../main ../../dataset/$1.txt -t -n $4 -k $3 -o -r $2 -A 2"
-../../main ../../dataset/$1.txt -t -n $4 -k $3 -o -r $2 -A 2
+../../main ../../dataset/$1.txt -t -n $4 -k $3 -o -r $2 -A 10
 mv ../../dataset/$1.out ../../dataset/$1.cmsa.out
 
 echo "=========================================="

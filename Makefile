@@ -6,7 +6,7 @@ CCLIB=  -I$(INC_DIR) -L$(LIB_DIR) -ldl -lsdsl -ldivsufsort -ldivsufsort64
 CFLAGS= -Wall -Werror -lm -ldl -Wno-unused-variable -O3
 #CFLAGS= -O0 -g -lm -ldl
 
-SDSL = 0
+SDSL = 1
 DEFINES = -DDEBUG=$(DEBUG) -DSDSL=$(SDSL)
 
 ifeq ($(SDSL),1)
