@@ -2,7 +2,7 @@ CC=g++ -std=c++11
 LIB_DIR = ${HOME}/lib
 INC_DIR = ${HOME}/include
 
-CCLIB=  -I$(INC_DIR) -L$(LIB_DIR) -lsdsl -ldivsufsort -ldivsufsort64
+CCLIB=  -I$(INC_DIR) -L$(LIB_DIR) -ldl -lsdsl -ldivsufsort -ldivsufsort64
 CFLAGS= -Wall -Werror -lm -ldl -Wno-unused-variable -O3
 #CFLAGS= -O0 -g -lm -ldl
 
