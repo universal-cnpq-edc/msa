@@ -200,6 +200,7 @@ int retrieve(int bucket, int j, int * * SIMPlocal, int * INT_ID_local, int * INT
 // Sequential scan (exact search)
 //#define MANHATTAN
 #define EUCLIDEAN
+//#define DEBUG_EXACT_SEARCH
 class result;
 float distance(int *o1, int *o2, int dim);
 int exact(string s_in, string s_out, int output, int verbose, int time, int knn, int r, int num_o, int sel_q); // exact search
@@ -393,6 +394,7 @@ int cMSAs(string s_in, string s_out, int output, int verbose, int time, int knn,
         num_q = sel_q;
     }
     
+    int datasetn = n;
     if (num_o != 0 and num_o < n) n = num_o;
     /********************/
 
@@ -438,6 +440,11 @@ int cMSAs(string s_in, string s_out, int output, int verbose, int time, int knn,
     if(time) time_start(&t_start, &c_start);
 
     fullPermutationIndexingSIMPLE9(refs, dim, n, R, f_in);
+
+    // consumir registros nao utilizados na execução: datasetn - n (datasetn é igual ao n do arquivo de dados pois n = num_o)
+    int ignore;
+    for (int i = 0; i < dim * (datasetn - n); i++) f_in >> ignore; // registros não utilizados
+
     
 //    for (int i = 0; i < refs; i++) {
 //        for (int j = 0; j < (int) SIMP.at(i).size(); j++) {
@@ -581,6 +588,7 @@ int cMSA_Simple9(string s_in, string s_out, int output, int verbose, int time, i
         num_q = sel_q;
     }
     
+    int datasetn = n;
     if (num_o != 0 and num_o < n) n = num_o;
     /********************/
 
@@ -611,7 +619,10 @@ int cMSA_Simple9(string s_in, string s_out, int output, int verbose, int time, i
     if(time) time_start(&t_start, &c_start);
     
     fullPermutationIndexingSIMPLE9counter(refs, dim, n, R, f_in_tmp, COUNTERlocal);
-        
+
+    // consumir registros nao utilizados na execução: datasetn - n (datasetn é igual ao n do arquivo de dados pois n = num_o)
+    for (int i = 0; i < dim * (datasetn - n); i++) f_in_tmp >> ignore; // registros não utilizados
+    
     // definição da estrutura com as dimensões contadas previamente 
     for (int i = 0; i < refs; i++) {
         SIMPlocal[i] = new int[ COUNTERlocal[i] ];
@@ -653,6 +664,7 @@ int cMSA_Simple9(string s_in, string s_out, int output, int verbose, int time, i
         num_q = sel_q;
     }
     
+    datasetn = n;
     if (num_o != 0 and num_o < n) n = num_o;
     /********************/
 
@@ -664,6 +676,8 @@ int cMSA_Simple9(string s_in, string s_out, int output, int verbose, int time, i
     
     fullPermutationIndexingSIMPLE9(refs, dim, n, R, f_in, SIMPlocal);
     
+    // consumir registros nao utilizados na execução: datasetn - n (datasetn é igual ao n do arquivo de dados pois n = num_o)
+    for (int i = 0; i < dim * (datasetn - n); i++) f_in >> ignore; // registros não utilizados
     
 //    for (int i = 0; i < refs; i++) {
 //        for (int j = 0; j < COUNTERlocal[i]; j++) {
@@ -786,6 +800,7 @@ int cMSA(string s_in, string s_out, int output, int verbose, int time, int knn, 
         num_q = sel_q;
     }
     
+    int datasetn = n;
     if (num_o != 0 and num_o < n) n = num_o;
     /********************/
 
@@ -806,6 +821,10 @@ int cMSA(string s_in, string s_out, int output, int verbose, int time, int knn, 
 
     fullPermutationIndexing(refs, dim, n, R, f_in, BS);
 
+    // consumir registros nao utilizados na execução: datasetn - n (datasetn é igual ao n do arquivo de dados pois n = num_o)
+    int ignore;
+    for (int i = 0; i < dim * (datasetn - n); i++) f_in >> ignore; // registros não utilizados
+    
     /**/
     //delete[] o;
     //delete[] lastValues;
@@ -852,12 +871,21 @@ int cMSA(string s_in, string s_out, int output, int verbose, int time, int knn, 
 
         if(time) time_start(&t_start, &c_start);
 
+        #ifdef DEBUG_EXACT_SEARCH
+        cout << endl << "First 10 queries:" << endl;
+        #endif
         for (int i = 0; i < num_q; i++) {
 
             int q[dim];
             for (int j = 0; j < dim; j++) {
                 f_in >> q[j];
+                #ifdef DEBUG_EXACT_SEARCH
+                if (i < 10) cout << q[j] << " ";
+                #endif
             }
+            #ifdef DEBUG_EXACT_SEARCH
+            if (i < 10) cout << endl;
+            #endif
             
             //struct Node *acc = new struct Node[n];//?ok
             struct Node *acc = NULL;
@@ -942,6 +970,7 @@ int cMSAdeltaBoost(string s_in, string s_out, int output, int verbose, int time,
         num_q = sel_q;
     }
     
+    int datasetn = n;
     if (num_o != 0 and num_o < n) n = num_o;
     /********************/
 
@@ -959,6 +988,10 @@ int cMSAdeltaBoost(string s_in, string s_out, int output, int verbose, int time,
 
     fullPermutationIndexingBoost(refs, dim, n, R, f_in, DBS);
 
+    // consumir registros nao utilizados na execução: datasetn - n (datasetn é igual ao n do arquivo de dados pois n = num_o)
+    int ignore;
+    for (int i = 0; i < dim * (datasetn - n); i++) f_in >> ignore; // registros não utilizados
+    
     if(verbose)
         cout << "dim = " << dim << "; refs = " << refs << "; n = " << n  << "; q = " << num_q << endl;
 
@@ -1059,6 +1092,7 @@ int cMSAdelta_v2(string s_in, string s_out, int output, int verbose, int time, i
         num_q = sel_q;
     }
     
+    int datasetn = n;
     if (num_o != 0 and num_o < n) n = num_o;
     /********************/
 
@@ -1078,6 +1112,9 @@ int cMSAdelta_v2(string s_in, string s_out, int output, int verbose, int time, i
     }
 
     fullPermutationIndexingCounter(refs, dim, n, R, f_int_tmp, offset);
+
+    // consumir registros nao utilizados na execução: datasetn - n (datasetn é igual ao n do arquivo de dados pois n = num_o)
+    for (int i = 0; i < dim * (datasetn - n); i++) f_int_tmp >> ignore; // registros não utilizados
     
 //    long long int summ = 0;
 //    for (int i = 0; i < refs; i++) {
@@ -1116,6 +1153,7 @@ int cMSAdelta_v2(string s_in, string s_out, int output, int verbose, int time, i
         num_q = sel_q;
     }
     
+    datasetn = n;
     if (num_o != 0 and num_o < n) n = num_o;
     /********************/
 
@@ -1138,7 +1176,10 @@ int cMSAdelta_v2(string s_in, string s_out, int output, int verbose, int time, i
     
     fullPermutationIndexing(refs, dim, n, R, f_in, BARR);
     
-//    for (int i = 0; i < refs; i++) {
+    // consumir registros nao utilizados na execução: datasetn - n (datasetn é igual ao n do arquivo de dados pois n = num_o)
+    for (int i = 0; i < dim * (datasetn - n); i++) f_in >> ignore; // registros não utilizados
+
+    //    for (int i = 0; i < refs; i++) {
 //        int bucket_size_bytes = offset[i] / 8 + 1;
 //        for (int k = 0; k < bucket_size_bytes; k++) {
 //            printf("%d ", BARR[i][k]);
@@ -1249,6 +1290,7 @@ int cMSAdelta_v3(string s_in, string s_out, int output, int verbose, int time, i
         num_q = sel_q;
     }
     
+    int datasetn = n;
     if (num_o != 0 and num_o < n) n = num_o;
     /********************/
 
@@ -1269,6 +1311,9 @@ int cMSAdelta_v3(string s_in, string s_out, int output, int verbose, int time, i
 
     // conta previamente o tamanho do array que será usado
     fullPermutationIndexingCounter(refs, dim, n, R, f_int_tmp, offset);
+
+    // consumir registros nao utilizados na execução: datasetn - n (datasetn é igual ao n do arquivo de dados pois n = num_o)
+    for (int i = 0; i < dim * (datasetn - n); i++) f_int_tmp >> ignore; // registros não utilizados
     
 //    long long int summ = 0;
 //    for (int i = 0; i < refs; i++) {
@@ -1307,6 +1352,7 @@ int cMSAdelta_v3(string s_in, string s_out, int output, int verbose, int time, i
         num_q = sel_q;
     }
     
+    datasetn = n;
     if (num_o != 0 and num_o < n) n = num_o;
     /********************/
 
@@ -1346,6 +1392,10 @@ int cMSAdelta_v3(string s_in, string s_out, int output, int verbose, int time, i
     }
     
     fullPermutationIndexingA9(refs, dim, n, R, f_in, BARR, shiftArr);
+
+    // consumir registros nao utilizados na execução: datasetn - n (datasetn é igual ao n do arquivo de dados pois n = num_o)
+    for (int i = 0; i < dim * (datasetn - n); i++) f_in >> ignore; // registros não utilizados
+
     
 //    for (int i = 0; i < refs; i++) {
 //        int bucket_size_bytes = offset[i] / 8 + 1;
@@ -1457,6 +1507,7 @@ int cMSA_diff(string s_in, string s_out, int output, int verbose, int time, int 
         num_q = sel_q;
     }
     
+    int datasetn = n;
     if (num_o != 0 and num_o < n) n = num_o;
     /********************/
 
@@ -1487,6 +1538,9 @@ int cMSA_diff(string s_in, string s_out, int output, int verbose, int time, int 
     }
     
     fullPermutationIndexingA6(refs, dim, n, R, f_in, BARR, block_size);
+
+    // consumir registros nao utilizados na execução: datasetn - n (datasetn é igual ao n do arquivo de dados pois n = num_o)
+    for (int i = 0; i < dim * (datasetn - n); i++) f_in >> ignore; // registros não utilizados
         
 //    for (int i = 0; i < refs; i++) {
 //        for (int k = 0; k < bucket_size; k++) {
@@ -1592,6 +1646,7 @@ int cMSA_sdsl(string s_in, string s_out, int output, int verbose, int time, int 
         num_q = sel_q;
     }
     
+    int datasetn = n;
     if (num_o != 0 and num_o < n) n = num_o;
     /********************/
  
@@ -1656,6 +1711,12 @@ int cMSA_sdsl(string s_in, string s_out, int output, int verbose, int time, int 
     delete[] oi;
     delete[] lpi;
 
+    
+    // consumir registros nao utilizados na execução: datasetn - n (datasetn é igual ao n do arquivo de dados pois n = num_o)
+    int ignore;
+    for (int i = 0; i < dim * (datasetn - n); i++) f_in >> ignore; // registros não utilizados
+    
+    
 /**********************************************************************/
 
     wt_sdsl WT;
@@ -1789,6 +1850,7 @@ int MSA(string s_in, string s_out, int output, int verbose, int time, int knn, i
         num_q = sel_q;
     }
     
+    int datasetn = n;
     if (num_o != 0 and num_o < n) n = num_o;
     /********************/
 
@@ -1824,6 +1886,10 @@ int MSA(string s_in, string s_out, int output, int verbose, int time, int knn, i
     if(time) time_start(&t_start, &c_start);
     
     fullPermutationIndexing(refs, dim, n, R, f_in, M);
+
+    // consumir registros nao utilizados na execução: datasetn - n (datasetn é igual ao n do arquivo de dados pois n = num_o)
+    int ignore;
+    for (int i = 0; i < dim * (datasetn - n); i++) f_in >> ignore; // registros não utilizados
     
     if(verbose)
         cout << "dim = " << dim << "; refs = " << refs << "; n = " << n  << "; q = " << num_q << endl;
@@ -1926,6 +1992,7 @@ int MSA_m(string s_in, string s_out, int output, int verbose, int time, int knn,
         num_q = sel_q;
     }
     
+    int datasetn = n;
     if (num_o != 0 and num_o < n) n = num_o;
     /********************/
 
@@ -1956,6 +2023,10 @@ int MSA_m(string s_in, string s_out, int output, int verbose, int time, int knn,
     if(time) time_start(&t_start, &c_start);
     
     fullPermutationIndexing_m(refs, dim, n, R, f_in, M);
+
+    // consumir registros nao utilizados na execução: datasetn - n (datasetn é igual ao n do arquivo de dados pois n = num_o)
+    int ignore;
+    for (int i = 0; i < dim * (datasetn - n); i++) f_in >> ignore; // registros não utilizados
     
     if(verbose)
         cout << "dim = " << dim << "; refs = " << refs << "; n = " << n  << "; q = " << num_q << endl;
@@ -2058,6 +2129,7 @@ int naive(string s_in, string s_out, int output, int verbose, int time, int knn,
         num_q = sel_q;
     }
     
+    int datasetn = n;
     if (num_o != 0 and num_o < n) n = num_o;
     /********************/
 
@@ -2075,6 +2147,10 @@ int naive(string s_in, string s_out, int output, int verbose, int time, int knn,
 
     fullSequentialIndexing(refs, dim, n, R, f_in, O);
 
+    // consumir registros nao utilizados na execução: datasetn - n (datasetn é igual ao n do arquivo de dados pois n = num_o)
+    int ignore;
+    for (int i = 0; i < dim * (datasetn - n); i++) f_in >> ignore; // registros não utilizados
+    
     if(verbose)
         cout << "dim = " << dim << "; refs = " << refs << "; n = " << n  << "; q = " << num_q << endl;
       //cout << "(n_objs x n_refs) x  32 bits = (" << n << " x " << refs << ") x 32 bits = " << n * refs * 32 << endl;
@@ -2792,13 +2868,22 @@ void fullPermutationIndexing(int refs, int dim, int n, int* refsR, std::fstream&
     long long int summ = 0;
     // ************************
     
+    #ifdef DEBUG_EXACT_SEARCH
+    cout << endl << "First 10 objects:" << endl;
+    #endif
     for (int i = 0; i < n; i++) {
 
         //int oi[dim];
         for (int kk = 0; kk < dim; kk++) {
             //oi[kk] = domainD[dim * i + kk]; //objeto da lista
             f_in >> oi[kk];
+            #ifdef DEBUG_EXACT_SEARCH
+            if (i < 10) cout << oi[kk] << " ";
+            #endif
         }
+        #ifdef DEBUG_EXACT_SEARCH
+        if (i < 10) cout << endl;
+        #endif
 
         createPositionList(refs, dim, oi, lpi, refsR);
 
@@ -4262,6 +4347,11 @@ int exact(string s_in, string s_out, int output, int verbose, int time, int knn,
     }
     /********************/
     
+    int datasetn = n;
+    if (num_o != 0 and num_o < n) n = num_o;
+
+    /********************/
+    
     if(time) time_start(&t_start, &c_start);
         
     // read references
@@ -4275,13 +4365,26 @@ int exact(string s_in, string s_out, int output, int verbose, int time, int knn,
         }
     }
 
+    // Read non-used objects: datasetn - n (datasetn é igual ao n do arquivo de dados pois n = num_o)
+    int ignore;
+    for (int i = 0; i < dim * (datasetn - n); i++) f_in >> ignore; // registros não utilizados
+
+    #ifdef DEBUG_EXACT_SEARCH
+    cout << endl << "First 10 queries:" << endl;
+    #endif
     // Read queries
     int **queries = new int*[num_q];
     for (int i = 0; i < num_q; i++) {
         queries[i] = new int[dim];
         for (int j = 0; j < dim; j++) { 
             f_in >> queries[i][j]; 
+            #ifdef DEBUG_EXACT_SEARCH
+            if (i < 10) cout << queries[i][j] << " ";
+            #endif
         }
+        #ifdef DEBUG_EXACT_SEARCH
+        if (i < 10) cout << endl;
+        #endif
     }
 
     // Goal was to read queries: let's close the input file
@@ -4325,13 +4428,23 @@ int exact(string s_in, string s_out, int output, int verbose, int time, int knn,
 
         float d, max;
         
+        #ifdef DEBUG_EXACT_SEARCH
+        cout << endl << "First 10 objects:" << endl;
+        #endif
+
         // Read objects: for each object, consider it to be included in the result of each query
         int *obj = new int[dim];
         for (int i = 0; i < n; i++) {
             // read 1 object
             for (int kk = 0; kk < dim; kk++) {
                 f_in >> obj[kk];
+                #ifdef DEBUG_EXACT_SEARCH
+                if (i < 10) cout << obj[kk] << " ";
+                #endif
             }
+            #ifdef DEBUG_EXACT_SEARCH
+            if (i < 10) cout << endl;
+            #endif
             
             // for each query
             for (int j = 0; j < num_q; j++) {
