@@ -337,7 +337,11 @@ int main(int argc, char** argv) {
         case 10:
             cout<<"## cMSA SDSL (wavelet tree) ##"<<endl;
             
+            #if SDSL
             cMSA_sdsl(s_in, s_out, output, verbose, time, knn, r, num_o, sel_q);
+            #else
+            cout << "Not supported" <<endl;
+            #endif
             
 //            #if SDSL
 //            cMSA_sdsl(s_in, s_out, output, verbose, time, knn, r, num_o, sel_q);
