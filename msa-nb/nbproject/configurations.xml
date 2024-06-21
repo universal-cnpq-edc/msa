@@ -43,7 +43,7 @@
         </ccTool>
         <linkerTool>
           <output>../main</output>
-          <commandLine>-I${HOME}/include -L${HOME}/lib -lsdsl -ldivsufsort -ldivsufsort64</commandLine>
+          <commandLine>-I${HOME}/include -L${HOME}/lib -ldl -lsdsl -ldivsufsort -ldivsufsort64</commandLine>
         </linkerTool>
       </compileType>
       <item path="../external/malloc_count/malloc_count.c"
@@ -78,7 +78,7 @@
         </asmTool>
         <linkerTool>
           <output>../main</output>
-          <commandLine>-I${HOME}/include -L${HOME}/lib -lsdsl -ldivsufsort -ldivsufsort64</commandLine>
+          <commandLine>-I${HOME}/include -L${HOME}/lib -ldl -lsdsl -ldivsufsort -ldivsufsort64</commandLine>
         </linkerTool>
       </compileType>
       <item path="../external/malloc_count/malloc_count.c"

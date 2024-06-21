@@ -61,7 +61,7 @@ LDLIBSOPTIONS=
 
 ../main: ${OBJECTFILES}
 	${MKDIR} -p ..
-	${LINK.cc} -o ../main ${OBJECTFILES} ${LDLIBSOPTIONS} -I${HOME}/include -L${HOME}/lib -lsdsl -ldivsufsort -ldivsufsort64
+	${LINK.cc} -o ../main ${OBJECTFILES} ${LDLIBSOPTIONS} -I${HOME}/include -L${HOME}/lib -ldl -lsdsl -ldivsufsort -ldivsufsort64
 
 ${OBJECTDIR}/_ext/75fcdad/malloc_count.o: ../external/malloc_count/malloc_count.c
 	${MKDIR} -p ${OBJECTDIR}/_ext/75fcdad
