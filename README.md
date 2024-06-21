@@ -1,8 +1,8 @@
-# compact MSA
+# Compact MSA
 
 ### Build requirements
 
-An C++ Compiler (e.g. GNU G++ or other C++)
+A C++ Compiler (e.g. GNU G++ or other C++)
 
 ### Install
 
