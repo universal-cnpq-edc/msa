@@ -46,18 +46,22 @@ float distance(int *o1, int *o2, int dim) {
     return d;
 }
 
-int **getqueries(string s_in, int *dim, int *refs, int *n, int *num_q);
+int **getqueries(string s_in, int *dim, int *refs, int *n, int *num_q, int numberofrecords);
 int **getresults(string exactfile_in, int num_q, int k);
 int discoverk(string s_in);
-int **getobjects(string s_in);
-void compareanwers(int **exact_ids, int **approx_ids, int num_q, int k);
+int **getobjects(string s_in, int numberofrecords);
+void compareanswers(int **exact_ids, int **approx_ids, int num_q, int k);
 
 int main(int argc, char** argv) {
 
-    if (argc != 4) {
+    if (argc != 5) {
         printf("This program compares the output between a set of exact and approximate searches.\n");
         printf("Usage: this program receives 3 file names\n\n");
-        printf("       ./compare datafile exactresult approximate \n");
+        printf("       ./compare datafile exactresult approximate n \n");
+        printf("            datafile: msa data file format \n");
+        printf("            exactresult: msa output \n");
+        printf("            approximate: msa output \n");
+        printf("            n: number of records employed in the job\n\n");
         return 0;
     }
 
@@ -65,19 +69,20 @@ int main(int argc, char** argv) {
     string exactfile_in = argv[2];
     string approxfile_in = argv[3];
     string file_out = datafile_in.substr(0, datafile_in.rfind('.', datafile_in.length()) ) + ".compare";
+    int numberofrecords = atoi(argv[4]);
 
     int dim, refs, n, num_q;
    
-    int **queries = getqueries(datafile_in, &dim, &refs, &n, &num_q);
+    int **queries = getqueries(datafile_in, &dim, &refs, &n, &num_q, numberofrecords);
 
     int k = discoverk(exactfile_in);
     int **exact_ids = getresults(exactfile_in, num_q, k);
     int **approx_ids = getresults(approxfile_in, num_q, k);
     
     // % of correct answers of the approximate query compared to the exact query
-    compareanwers(exact_ids, approx_ids, num_q, k);
+    compareanswers(exact_ids, approx_ids, num_q, k);
     
-    int **objects = getobjects(datafile_in);
+    int **objects = getobjects(datafile_in, numberofrecords);
 
     float d, maxdist, exactmaxdist;
     float avgmaxdist = 0, avgexactmaxdist = 0;
@@ -129,7 +134,7 @@ int main(int argc, char** argv) {
     return 0;
 }
 
-void compareanwers(int **exact_ids, int **approx_ids, int num_q, int k) {
+void compareanswers(int **exact_ids, int **approx_ids, int num_q, int k) {
     // % of correct answers of the approximate query compared to the exact query
     
     // for each query
@@ -157,12 +162,12 @@ void compareanwers(int **exact_ids, int **approx_ids, int num_q, int k) {
     for (int i = 0; i < num_q; i++)
         squared_sum += (perc - percs[i]) * (perc - percs[i]);
     sttdev = sqrt(squared_sum / num_q);
-    printf("approx compared to exact queries: avg %.1f%% stddev %f%% correct results\n", perc, sttdev);
+    printf("approx compared to exact queries: avg %.1f%% stddev %.1f%% correct results\n", perc, sttdev);
 
     return;    
 }
 
-int **getobjects(string s_in) {
+int **getobjects(string s_in, int numberofrecords) {
 
     int ignorevalue;
 
@@ -179,6 +184,13 @@ int **getobjects(string s_in) {
     // read references
     for (int i = 0; i < dim * refs; i++) f_in >> ignorevalue; //referencias
 
+    if (numberofrecords > n) {
+        printf("\n\n[WARNING] number of records of the experiment is greater than number of records in the file\n\n");
+        exit(0);
+    }
+
+    //if (numberofrecords > 0) n = numberofrecords;
+    
     // read objects
     int **objs = new int*[n];
     for (int i = 0; i < n; i++) {
@@ -229,7 +241,7 @@ int **getresults(string s_in, int num_q, int k) {
 }
 
 //sequential scan
-int **getqueries(string s_in, int *dim, int *refs, int *n, int *num_q) {
+int **getqueries(string s_in, int *dim, int *refs, int *n, int *num_q, int numberofrecords) {
 
     int ignorevalue;
 
@@ -260,7 +272,7 @@ int **getqueries(string s_in, int *dim, int *refs, int *n, int *num_q) {
 
     f_in.close();
     
-    cout << "dim = " << *dim << "; refs = " << *refs << "; n = " << *n  << "; q = " << *num_q << endl;
+    cout << "dim = " << *dim << "; refs = " << *refs << "; n = " << numberofrecords << " out of " << *n  << "; q = " << *num_q << endl;
 
     return queries;
 }
