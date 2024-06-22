@@ -27,6 +27,6 @@ echo "=========================================="
 echo "head $1.msa.out"
 head $1.msa.out
 echo "=========================================="
-echo "./compare $1.txt $1.exact.out $1.msa.out $4" > $1.compare.txt
-./compare $1.txt $1.exact.out $1.msa.out $4 >> $1.compare.txt
-cat $1.compare.txt
+echo "./compare $1.txt $1.exact.out $1.msa.out $4" > $1-$2-$3-$4.compare.txt
+./compare $1.txt $1.exact.out $1.msa.out $4 >> $1-$2-$3-$4.compare.txt
+cat $1-$2-$3-$4.compare.txt
