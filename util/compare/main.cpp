@@ -54,14 +54,15 @@ void compareanswers(int **exact_ids, int **approx_ids, int num_q, int k);
 
 int main(int argc, char** argv) {
 
-    if (argc != 5) {
+    if (argc != 6) {
         printf("This program compares the output between a set of exact and approximate searches.\n");
         printf("Usage: this program receives 3 file names\n\n");
-        printf("       ./compare datafile exactresult approximate n \n");
+        printf("       ./compare datafile exactresult approximate n numq \n");
         printf("            datafile: msa data file format \n");
         printf("            exactresult: msa output \n");
         printf("            approximate: msa output \n");
-        printf("            n: number of records employed in the job\n\n");
+        printf("            n: number of records employed in the job\n");
+        printf("            numq: number of queries\n\n");
         return 0;
     }
 
@@ -70,10 +71,13 @@ int main(int argc, char** argv) {
     string approxfile_in = argv[3];
     string file_out = datafile_in.substr(0, datafile_in.rfind('.', datafile_in.length()) ) + ".compare";
     int numberofrecords = atoi(argv[4]);
+    int numberofqueries = atoi(argv[5]);
 
     int dim, refs, n, num_q;
    
     int **queries = getqueries(datafile_in, &dim, &refs, &n, &num_q, numberofrecords);
+
+    num_q = numberofqueries;
 
     int k = discoverk(exactfile_in);
     int **exact_ids = getresults(exactfile_in, num_q, k);

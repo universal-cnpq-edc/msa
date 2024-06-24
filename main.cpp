@@ -13,7 +13,7 @@
  */
 
 /*
-   SDSL install instructions 
+   SDSL install instructions
    git clone https://github.com/simongog/sdsl-lite.git
    cd sdsl-lite
    ./install.sh
@@ -4350,6 +4350,11 @@ int exact(string s_in, string s_out, int output, int verbose, int time, int knn,
         for (int i = 0; i < dim * (datasetrefs - refs); i++) f_in >> ignore; //referencias
     }
     /********************/
+
+    if (sel_q != 0) {
+        if (sel_q > num_q) n = n - (sel_q - num_q);
+        num_q = sel_q;
+    }
     
     int datasetn = n;
     if (num_o != 0 and num_o < n) n = num_o;
@@ -4362,7 +4367,7 @@ int exact(string s_in, string s_out, int output, int verbose, int time, int knn,
     for (int i = 0; i < dim * refs; i++) f_in >> ignorevalue; //referencias
 
     // Read objects
-    // goal is to ignore objects, in order to be able read the references. Later we will read the objects again
+    // goal is to ignore objects, in order to be able read the queries. Later we will read the objects again
     for (int i = 0; i < n; i++) {
         for (int kk = 0; kk < dim; kk++) {
             f_in >> ignorevalue;
@@ -4415,12 +4420,12 @@ int exact(string s_in, string s_out, int output, int verbose, int time, int knn,
         //if(r!=0 and r<refs) refs = r;
         f_in >> n; //objetos
         f_in >> num_q; //consultas
-        
+
         // read references
         for (int i = 0; i < dim * refs; i++) f_in >> ignorevalue; //referencias
 
         result *results = new result[num_q];
-        
+
         std::fstream f_out;
         if(output){
           f_out.open(s_out, std::ios_base::out);
@@ -4431,7 +4436,7 @@ int exact(string s_in, string s_out, int output, int verbose, int time, int knn,
         if(time) time_start(&t_start, &c_start);
 
         float d, max;
-        
+
         #ifdef DEBUG_EXACT_SEARCH
         cout << endl << "First 10 objects:" << endl;
         #endif
@@ -4449,7 +4454,7 @@ int exact(string s_in, string s_out, int output, int verbose, int time, int knn,
             #ifdef DEBUG_EXACT_SEARCH
             if (i < 10) cout << endl;
             #endif
-            
+
             // for each query
             for (int j = 0; j < num_q; j++) {
                 d = distance(queries[j], obj, dim);
@@ -4465,7 +4470,7 @@ int exact(string s_in, string s_out, int output, int verbose, int time, int knn,
                         results[j].removelast();
                     }
                 }
-            }           
+            }
         }
         delete[]obj;
         // for each query
@@ -4487,13 +4492,12 @@ int exact(string s_in, string s_out, int output, int verbose, int time, int knn,
     for (int i = 0; i < num_q; i++)
         delete[]queries[i];
     delete[]queries;
-    
+
     return 0;
 }
 
 // Used for EXACT SEARCH
 int write_output(std::fstream& f_out, result *r){
-    
     r->begin();
     int key;
     while (!r->eof()) {
