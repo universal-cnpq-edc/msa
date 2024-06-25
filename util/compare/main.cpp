@@ -91,6 +91,8 @@ int main(int argc, char** argv) {
     // % of correct answers of the approximate query compared to the exact query
     compareanswers(exact_ids, approx_ids, num_q, k);
     
+    return 0;
+    
     int **objects = getobjects(datafile_in, numberofrecords);
 
     float d, maxdist, exactmaxdist;
