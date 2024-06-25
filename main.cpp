@@ -4421,6 +4421,30 @@ int exact(string s_in, string s_out, int output, int verbose, int time, int knn,
         f_in >> n; //objetos
         f_in >> num_q; //consultas
 
+        /********************/
+        int datasetrefs;
+        if (r != 0) {
+            if (r > refs) { cout << "cannot run with this number of references (value is greater than the number of references in the datafile" << endl; exit(0); };
+
+            datasetrefs = refs;
+            refs = r;
+
+            // let's ignore the first (datasetrefs - refs) references
+            int ignore;
+            for (int i = 0; i < dim * (datasetrefs - refs); i++) f_in >> ignore; //referencias
+        }
+        /********************/
+
+        if (sel_q != 0) {
+            if (sel_q > num_q) n = n - (sel_q - num_q);
+            num_q = sel_q;
+        }
+        
+        int datasetn = n;
+        if (num_o != 0 and num_o < n) n = num_o;
+
+        /********************/        
+        
         // read references
         for (int i = 0; i < dim * refs; i++) f_in >> ignorevalue; //referencias
 

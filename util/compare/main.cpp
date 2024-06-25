@@ -74,12 +74,16 @@ int main(int argc, char** argv) {
     int numberofqueries = atoi(argv[5]);
 
     int dim, refs, n, num_q;
-   
+
     int **queries = getqueries(datafile_in, &dim, &refs, &n, &num_q, numberofrecords);
 
     num_q = numberofqueries;
 
     int k = discoverk(exactfile_in);
+    if (k == 0) {
+        cout << "Nao foi possivel obter k. Verifique se o arquivo " << exactfile_in << " contem dados." << endl << endl;
+        exit(0);
+    }
     int **exact_ids = getresults(exactfile_in, num_q, k);
     int **approx_ids = getresults(approxfile_in, num_q, k);
     
@@ -250,7 +254,10 @@ int **getqueries(string s_in, int *dim, int *refs, int *n, int *num_q, int numbe
     int ignorevalue;
 
     std::fstream f_in(s_in, std::ios_base::in);
-    if(!f_in.is_open()) exit(EXIT_FAILURE);
+    if(!f_in.is_open()) {
+        cout << "Nao foi possivel abrir arquivo " << s_in << ". Sinto muito!" << endl << endl << endl;
+        exit(EXIT_FAILURE);
+    }
 
     //int dim, refs, n, num_q;
 
