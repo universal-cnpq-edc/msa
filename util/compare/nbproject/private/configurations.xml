@@ -32,8 +32,10 @@
           <runcommandpicklistitem>"${OUTPUT_PATH}" ../../msa/dataset/pendigits.txt ../../msa/dataset/pendigits.exact.out ../../msa/dataset/pendigits.cmsa.out 2000 5</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}" home/hb/dataset/pendigits.txt /home/hb/dataset/pendigits.exact.out /home/hb/dataset/pendigits.msa.64r.out 2000 5</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}" /home/hb/dataset/pendigits.txt /home/hb/dataset/pendigits.exact.out /home/hb/dataset/pendigits.msa.64r.out 2000 5</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}" /home/hb/dataset/pendigits.txt /home/hb/dataset/pendigits.exact.out pendigits.cmsa.out 2000 5</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}" /home/hb/dataset/pendigits.txt /home/hb/dataset/pendigits.exact.out /home/hb/dataset/pendigits.cmsa.out 2000 5</runcommandpicklistitem>
         </runcommandpicklist>
-        <runcommand>"${OUTPUT_PATH}" /home/hb/dataset/pendigits.txt /home/hb/dataset/pendigits.exact.out /home/hb/dataset/pendigits.msa.64r.out 2000 5</runcommand>
+        <runcommand>"${OUTPUT_PATH}" /home/hb/dataset/pendigits.txt /home/hb/dataset/pendigits.exact.out /home/hb/dataset/pendigits.cmsa.out 2000 5</runcommand>
         <rundir></rundir>
         <buildfirst>true</buildfirst>
         <terminal-type>0</terminal-type>
@@ -53,6 +55,8 @@
         <gdb_interceptlist>
           <gdbinterceptoptions gdb_all="false" gdb_unhandled="true" gdb_unexpected="true"/>
         </gdb_interceptlist>
+        <gdb_signals>
+        </gdb_signals>
         <gdb_options>
           <DebugOptions>
           </DebugOptions>

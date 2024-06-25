@@ -65,7 +65,7 @@ int main(int argc, char** argv) {
         printf("            numq: number of queries\n\n");
         return 0;
     }
-
+    
     string datafile_in = argv[1];
     string exactfile_in = argv[2];
     string approxfile_in = argv[3];
@@ -78,6 +78,7 @@ int main(int argc, char** argv) {
     int **queries = getqueries(datafile_in, &dim, &refs, &n, &num_q, numberofrecords);
 
     num_q = numberofqueries;
+    if (numberofrecords > 0) n = numberofrecords;
 
     int k = discoverk(exactfile_in);
     if (k == 0) {
@@ -107,7 +108,7 @@ int main(int argc, char** argv) {
             if (d > maxdist)
                 maxdist = d;
         }
-        
+
         // distancia do k-esimo na consulta exata
         exactmaxdist = distance(queries[i], objects[ exact_ids[i][ k-1 ] ], dim);
         avgexactmaxdist += exactmaxdist;
@@ -197,7 +198,7 @@ int **getobjects(string s_in, int numberofrecords) {
         exit(0);
     }
 
-    //if (numberofrecords > 0) n = numberofrecords;
+    if (numberofrecords > 0) n = numberofrecords;
     
     // read objects
     int **objs = new int*[n];
@@ -233,7 +234,10 @@ int discoverk(string s_in) {
 
 int **getresults(string s_in, int num_q, int k) {
     std::fstream f_in(s_in, std::ios_base::in);
-    if(!f_in.is_open()) exit(EXIT_FAILURE);
+    if(!f_in.is_open()) {
+        cout << "Nao foi possivel abrir arquivo " << s_in << ". Sinto muito!" << endl << endl << endl;
+        exit(0);
+    }
    
     int **results = new int*[num_q];
     for (int i = 0; i < num_q; i++) {
@@ -256,7 +260,7 @@ int **getqueries(string s_in, int *dim, int *refs, int *n, int *num_q, int numbe
     std::fstream f_in(s_in, std::ios_base::in);
     if(!f_in.is_open()) {
         cout << "Nao foi possivel abrir arquivo " << s_in << ". Sinto muito!" << endl << endl << endl;
-        exit(EXIT_FAILURE);
+        exit(0);
     }
 
     //int dim, refs, n, num_q;
