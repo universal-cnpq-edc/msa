@@ -62,7 +62,8 @@ echo "====="
 echo "head $1/$2.msa.512r.out"
 head $1/$2.msa.512r.out
 echo "=========================================="
-echo "./compare $1/$2.txt $1/$2.exact.out $1/$2.msa.16r.out $3 $5"  >  $1/$2-$4nn-$3records.compare.txt
+echo "$5 queries"                                                    > $1/$2-$4nn-$3records.compare.txt
+echo "./compare $1/$2.txt $1/$2.exact.out $1/$2.msa.16r.out $3 $5"  >> $1/$2-$4nn-$3records.compare.txt
       ./compare $1/$2.txt $1/$2.exact.out $1/$2.msa.16r.out $3 $5   >> $1/$2-$4nn-$3records.compare.txt
 echo "=========================================="                   >> $1/$2-$4nn-$3records.compare.txt
 echo "./compare $1/$2.txt $1/$2.exact.out $1/$2.msa.32r.out $3 $5"  >> $1/$2-$4nn-$3records.compare.txt
