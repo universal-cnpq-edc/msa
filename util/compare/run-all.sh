@@ -69,6 +69,13 @@ echo "====="
 echo "head $1/$2.msa.1024r.out"
 head $1/$2.msa.1024r.out
 echo "=========================================="
+echo "../../main $1/$2.txt -t -n $3 -k $4 -o -q $5 -r 2048 -A 7"
+../../main $1/$2.txt -t -n $3 -k $4 -o -q $5 -r 2048 -A 7
+mv $1/$2.out $1/$2.msa.2048r.out
+echo "====="
+echo "head $1/$2.msa.2048r.out"
+head $1/$2.msa.2048r.out
+echo "=========================================="
 echo "$5 queries"                                                     > $1/$2-$4nn-$3records.compare.txt
 echo "./compare $1/$2.txt $1/$2.exact.out $1/$2.msa.16r.out $3 $5"   >> $1/$2-$4nn-$3records.compare.txt
       ./compare $1/$2.txt $1/$2.exact.out $1/$2.msa.16r.out $3 $5    >> $1/$2-$4nn-$3records.compare.txt
@@ -90,5 +97,8 @@ echo "./compare $1/$2.txt $1/$2.exact.out $1/$2.msa.512r.out $3 $5"  >> $1/$2-$4
 echo "=========================================="                    >> $1/$2-$4nn-$3records.compare.txt
 echo "./compare $1/$2.txt $1/$2.exact.out $1/$2.msa.1024r.out $3 $5" >> $1/$2-$4nn-$3records.compare.txt
       ./compare $1/$2.txt $1/$2.exact.out $1/$2.msa.1024r.out $3 $5  >> $1/$2-$4nn-$3records.compare.txt
+echo "=========================================="                    >> $1/$2-$4nn-$3records.compare.txt
+echo "./compare $1/$2.txt $1/$2.exact.out $1/$2.msa.2048r.out $3 $5" >> $1/$2-$4nn-$3records.compare.txt
+      ./compare $1/$2.txt $1/$2.exact.out $1/$2.msa.2048r.out $3 $5  >> $1/$2-$4nn-$3records.compare.txt
 echo "=========================================="                    >> $1/$2-$4nn-$3records.compare.txt
 cat $1/$2-$4nn-$3records.compare.txt
