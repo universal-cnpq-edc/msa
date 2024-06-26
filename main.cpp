@@ -31,6 +31,15 @@
   #define SDSL 1
 #endif
 
+
+#if M64
+  #define wbytes 8
+  #define uint_t uint64_t 
+#else
+  #define wbytes 4
+  #define uint_t uint32_t 
+#endif
+
 #include <cstdlib>
 #include <cstdio>
 #include <cmath>
@@ -1663,7 +1672,7 @@ int cMSA_sdsl(string s_in, string s_out, int output, int verbose, int time, int 
     //REMOVE
     //unsigned int * M = new unsigned int[refs * n];
     //unsigned int * S = new unsigned int[refs * n];
-    vector<uint32_t> L(refs);
+    vector<uint_t> L(refs);
     
     ofstream outfile("tmp.sdsl",ios::out | ios::binary);
        
@@ -1690,10 +1699,10 @@ int cMSA_sdsl(string s_in, string s_out, int output, int verbose, int time, int 
         createPositionList(refs, dim, oi, lpi, R);
 
         for (int j = 0; j < refs; j++) {
-            //M[j * n + i] = i * refs + p(loi, j, refs);
-            unsigned int value = refs;
-            value *= i;
-            value += lpi[j];
+            ////M[j * n + i] = i * refs + p(loi, j, refs);
+            //unsigned int value = refs;
+            //value *= i;
+            //value += lpi[j];
             
             //FELIPE
             //S[i*refs + lpi[j]] = j;
@@ -1707,7 +1716,7 @@ int cMSA_sdsl(string s_in, string s_out, int output, int verbose, int time, int 
         }
         
         for (int i = 0; i < refs; i++) 
-          outfile.write((char*) &L[i], sizeof(uint32_t));
+          outfile.write((char*) &L[i], sizeof(uint_t));
     }
     
     outfile.close();
@@ -1724,7 +1733,7 @@ int cMSA_sdsl(string s_in, string s_out, int output, int verbose, int time, int 
 /**********************************************************************/
 
     wt_sdsl WT;
-    construct(WT, "tmp.sdsl", 4);
+    construct(WT, "tmp.sdsl", wbytes);
 
     //VALIDATE string S e WT
 /*
@@ -3603,12 +3612,12 @@ void fullPermutationSearching_sdsl(int refs, int dim, int n, int * q, int * refs
       inv_lq[lq[i]] = i;
     
     double Acc = 0.0;
-    for (int j = 0; j < n*refs; j++) {
+    for (uint_t j = 0; j < (uint_t)(n*refs); j++) {
        
           
       //int refPos = WT.select(oid+1, lq[j]) % refs;
       //int refPos = WT.select(oid+1, lq[j]);
-      int refPos = WT[j];
+      uint_t refPos = WT[j];
       int idx_refPos = j % refs;
       
       //
@@ -3625,8 +3634,8 @@ void fullPermutationSearching_sdsl(int refs, int dim, int n, int * q, int * refs
       int oid = j / refs;
       
       //cout << Acc << "\t" << oid << endl;
-      
-      if(j % refs == refs-1){
+      int pos = j%refs; 
+      if(pos == refs-1){
         struct Node tmp = {oid, Acc};
         push_pq_fixed_size(PQ, tmp, knn);
         //acc[oid].d = Acc;
