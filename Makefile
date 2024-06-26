@@ -6,6 +6,7 @@ CCLIB=  -I$(INC_DIR) -L$(LIB_DIR) -ldl -lsdsl -ldivsufsort -ldivsufsort64
 CFLAGS= -Wall -Werror -lm -ldl -Wno-unused-variable -O3
 #CFLAGS= -O0 -g -lm -ldl
 
+M64=0
 SDSL = 1
 DEFINES = -DDEBUG=$(DEBUG) -DSDSL=$(SDSL)
 
@@ -19,10 +20,13 @@ LIBOBJ = external/malloc_count/malloc_count.o
 
 DATA = dataset/input3.txt
 
-all: main 
+all: main main-64 
 
 main: main.cpp $(LIBOBJ)
-	$(CC) $(CFLAGS) $^  $(DEFINES) -o $@
+	$(CC) $(CFLAGS) $^ $(DEFINES) -DM64=0 -o $@
+
+main-64: main.cpp $(LIBOBJ)
+	$(CC) $(CFLAGS) $^ $(DEFINES) -DM64=1 -o $@
 
 %.o: %.c %.h
 	gcc -c $< -o $@
