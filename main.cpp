@@ -439,7 +439,6 @@ int cMSAs(string s_in, string s_out, int output, int verbose, int time, int knn,
 
     if(verbose)
         cout << "dim = " << dim << "; refs = " << refs << "; n = " << n  << "; q = " << num_q << endl;
-      //cout << "(n_objs x n_refs) x  32 bits = (" << n << " x " << refs << ") x 32 bits = " << n * refs * 32 << endl;
 
     if(time){
       printf("A3 %d %d %d %d Indexing: ", dim, refs, n, num_q);
@@ -1118,7 +1117,6 @@ int cMSA_sdsl(string s_in, string s_out, int output, int verbose, int time, int 
     
     if(verbose)
         cout << "dim = " << dim << "; refs = " << refs << "; n = " << n  << "; q = " << num_q << endl;
-      //cout << "(n_objs x n_refs) x  32 bits = (" << n << " x " << refs << ") x 32 bits = " << n * refs * 32 << endl;
 
     if(time){
       //cout << "Indexing:" << endl;
@@ -1244,7 +1242,6 @@ int MSA(string s_in, string s_out, int output, int verbose, int time, int knn, u
     
     if(verbose)
         cout << "dim = " << dim << "; refs = " << refs << "; n = " << n  << "; q = " << num_q << endl;
-      //cout << "(n_objs x n_refs) x  32 bits = (" << n << " x " << refs << ") x 32 bits = " << n * refs * 32 << endl;
 
     if(time){
       //cout << "Indexing:" << endl;
@@ -1369,7 +1366,6 @@ int naive(string s_in, string s_out, int output, int verbose, int time, int knn,
     
     if(verbose)
         cout << "dim = " << dim << "; refs = " << refs << "; n = " << n  << "; q = " << num_q << endl;
-      //cout << "(n_objs x n_refs) x  32 bits = (" << n << " x " << refs << ") x 32 bits = " << n * refs * 32 << endl;
 
     if(time){
       //cout << "Indexing:" << endl;
@@ -1377,9 +1373,6 @@ int naive(string s_in, string s_out, int output, int verbose, int time, int knn,
       time_stop(t_start, c_start);
     }
 
-    //cout << "Encoded size (bits) = " << n * refs * 32 << endl;
-    //cout << "Encoded size (bytes) = " << int(n * refs * 32/8) << endl;
-    //cout << "########" <<endl;
     totalSize = n * refs * sizeof(uint_t);
     printf("A0 %" PRIdN " %" PRIdN " %" PRIdN " %" PRIdN " Encoded size (bytes) = %zu\n", dim, refs, n, num_q, totalSize);
 
