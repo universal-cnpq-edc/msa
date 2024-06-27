@@ -553,6 +553,16 @@ int cMSA_Simple9(string s_in, string s_out, int output, int verbose, int time, i
     f_in_tmp >> n; //objetos
     f_in_tmp >> num_q; //consultas
     
+    /* =======================================================================  */
+    size_t totalSize = n * refs * sizeof(uint_t); //in bytes
+    #if M64 == 0
+    if (totalSize > pow(2,32)) {
+        printf("Required memory = %" PRIdN "x%" PRIdN " = %lf GB (run ./main-64)\n", refs, n, totalSize/pow(2,30));
+        exit(0);
+    }
+    #endif
+    /* =======================================================================  */
+
     if (r != 0) {
         if (r > refs) { cout << "cannot run with this number of references (value is greater than the number of references in the datafile" << endl; exit(0); };
 
@@ -747,6 +757,16 @@ int cMSAdelta_v3(string s_in, string s_out, int output, int verbose, int time, i
     f_int_tmp >> n; //objetos
     f_int_tmp >> num_q; //consultas
     
+    /* =======================================================================  */
+    size_t totalSize = n * refs * sizeof(uint_t); //in bytes
+    #if M64 == 0
+    if (totalSize > pow(2,32)) {
+        printf("Required memory = %" PRIdN "x%" PRIdN " = %lf GB (run ./main-64)\n", refs, n, totalSize/pow(2,30));
+        exit(0);
+    }
+    #endif
+    /* =======================================================================  */
+
     /********************/
     
     if (r != 0) {
@@ -1172,6 +1192,16 @@ int MSA(string s_in, string s_out, int output, int verbose, int time, int knn, u
     //if(r!=0 and r<refs) refs = r;
     f_in >> n; //objetos
     f_in >> num_q; //consultas
+
+    /* =======================================================================  */
+    size_t totalSize = n * refs * sizeof(uint_t); //in bytes
+    #if M64 == 0
+    if (totalSize > pow(2,32)) {
+        printf("Required memory = %" PRIdN "x%" PRIdN " = %lf GB (run ./main-64)\n", refs, n, totalSize/pow(2,30));
+        exit(0);
+    }
+    #endif
+    /* =======================================================================  */
     
     uint_t datasetrefs;
     if (r != 0) {
@@ -1194,18 +1224,7 @@ int MSA(string s_in, string s_out, int output, int verbose, int time, int knn, u
     uint_t datasetn = n;
     if (num_o != 0 and num_o < n) n = num_o;
     /********************/
-
-    
-    /* =======================================================================  */
-    size_t totalSize = n * refs * sizeof(uint_t); //in bytes
-    #if M64 == 0
-    if (totalSize > pow(2,32)) {
-        printf("Required memory = %" PRIdN "x%" PRIdN " = %lf GB (run ./main-64)\n", refs, n, totalSize/pow(2,30));
-        exit(0);
-    }
-    #endif
-    /* =======================================================================  */
-    
+ 
     int *R = new int[dim * refs];
     for (uint_t i = 0; i < dim * refs; i++) f_in >> R[i]; //referencias
 
@@ -1298,7 +1317,16 @@ int naive(string s_in, string s_out, int output, int verbose, int time, int knn,
     f_in >> n; //objetos
     f_in >> num_q; //consultas
     
-    
+    /* =======================================================================  */
+    size_t totalSize = n * refs * sizeof(uint_t); //in bytes
+    #if M64 == 0
+    if (totalSize > pow(2,32)) {
+        printf("Required memory = %" PRIdN "x%" PRIdN " = %lf GB (run ./main-64)\n", refs, n, totalSize/pow(2,30));
+        exit(0);
+    }
+    #endif
+    /* =======================================================================  */
+
     uint_t datasetrefs;
     if (r != 0) {
         if (r > refs) { cout << "cannot run with this number of references (value is greater than the number of references in the datafile" << endl; exit(0); };
@@ -1352,7 +1380,7 @@ int naive(string s_in, string s_out, int output, int verbose, int time, int knn,
     //cout << "Encoded size (bits) = " << n * refs * 32 << endl;
     //cout << "Encoded size (bytes) = " << int(n * refs * 32/8) << endl;
     //cout << "########" <<endl;
-    size_t totalSize = n * refs * sizeof(uint_t);
+    totalSize = n * refs * sizeof(uint_t);
     printf("A0 %" PRIdN " %" PRIdN " %" PRIdN " %" PRIdN " Encoded size (bytes) = %zu\n", dim, refs, n, num_q, totalSize);
 
     if(knn>0){//knn queries
@@ -2786,6 +2814,16 @@ int exact(string s_in, string s_out, int output, int verbose, int time, int knn,
     f_in >> n; //objetos
     f_in >> num_q; //consultas
     
+    /* =======================================================================  */
+    size_t totalSize = n * refs * sizeof(uint_t); //in bytes
+    #if M64 == 0
+    if (totalSize > pow(2,32)) {
+        printf("Required memory = %" PRIdN "x%" PRIdN " = %lf GB (run ./main-64)\n", refs, n, totalSize/pow(2,30));
+        exit(0);
+    }
+    #endif
+    /* =======================================================================  */
+
     /********************/
     uint_t datasetrefs;
     if (r != 0) {
